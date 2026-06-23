@@ -186,14 +186,21 @@
   var unsubscribe = null;
   function listenToProjects(){
     if(unsubscribe) unsubscribe();
-    unsubscribe = db.collection("projects").orderBy("createdAt", "asc").onSnapshot(function(snapshot){
+    unsubscribe = db.collection("projects").onSnapshot(function(snapshot){
       var projects = [];
       snapshot.forEach(function(doc){
         var data = doc.data();
         data._id = doc.id;
         projects.push(data);
       });
+      projects.sort(function(a, b){
+        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return ta - tb;
+      });
       renderList(projects);
+    }, function(err){
+      document.getElementById("list").innerHTML = '<p class="li-desc">Could not load projects: ' + err.message + '</p>';
     });
   }
 
