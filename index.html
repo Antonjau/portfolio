@@ -44,22 +44,30 @@
   .section-head h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:24px;margin:0;}
   .count{font-size:12px;color:var(--muted);}
 
-  #projects{display:flex;flex-direction:column;gap:16px;padding-bottom:30px;}
+  #projects{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;padding-bottom:30px;}
   .card{
-    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
-    border-radius:8px;padding:18px 22px 20px;
+    background:var(--card);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;
     box-shadow:0 1px 3px rgba(0,0,0,0.04);
     opacity:0;transform:translateY(16px);
-    transition:opacity 0.5s ease, transform 0.5s ease;
+    transition:opacity 0.5s ease, transform 0.5s ease, box-shadow 0.25s ease;
+    display:flex;flex-direction:column;
   }
+  .card:hover{box-shadow:0 6px 16px rgba(0,0,0,0.08);}
   .card.visible{opacity:1;transform:translateY(0);}
-  .card-title{font-family:'Source Serif 4',serif;font-size:19px;font-weight:600;margin:0 0 8px;}
+  .card-img{width:100%;height:160px;background:var(--line);object-fit:cover;display:block;}
+  .card-img-placeholder{
+    width:100%;height:160px;background:var(--line);display:flex;
+    align-items:center;justify-content:center;color:var(--muted);font-size:12px;
+  }
+  .card-body{padding:16px 18px 18px;border-top:3px solid var(--accent);flex:1;display:flex;flex-direction:column;}
+  .card-title{font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;margin:0 0 8px;}
   .card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
   .tag{font-size:11px;color:var(--accent-deep);background:#FDF3E3;padding:3px 9px;border-radius:12px;font-weight:500;}
-  .card-desc{font-size:15px;color:#33363D;margin:0 0 10px;}
-  .card-link{font-size:13px;color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--accent);}
+  .card-desc{font-size:14px;color:#33363D;margin:0 0 12px;flex:1;}
+  .card-link{font-size:13px;color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--accent);align-self:flex-start;}
   .card-link:hover{color:var(--accent);}
-  .empty,.error{font-size:14px;color:var(--muted);font-style:italic;padding:18px 0;}
+  .empty,.error{font-size:14px;color:var(--muted);font-style:italic;padding:18px 0;grid-column:1/-1;}
 
   footer{margin-top:50px;padding:24px 0 50px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
   footer a{color:var(--accent-deep);text-decoration:none;}
@@ -137,11 +145,17 @@ function render(projects){
   container.innerHTML = projects.slice().reverse().map(function(p){
     var tagsHtml = (p.tags || []).map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join("");
     var linkHtml = p.link ? '<a class="card-link" href="' + escapeHtml(p.link) + '" target="_blank" rel="noopener">View project →</a>' : '';
+    var imgHtml = p.image
+      ? '<img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
+      : '<div class="card-img-placeholder">No image yet</div>';
     return '<div class="card">' +
-        '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
-        '<div class="card-tags">' + tagsHtml + '</div>' +
-        '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
-        linkHtml +
+        imgHtml +
+        '<div class="card-body">' +
+          '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
+          '<div class="card-tags">' + tagsHtml + '</div>' +
+          '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
+          linkHtml +
+        '</div>' +
       '</div>';
   }).join("");
 
