@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Anthony Njau Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+  :root{
+    --ink:#18181B;
+    --paper:#F4F4F5;
+    --card:#FFFFFF;
+    --accent:#D97706;
+    --accent-deep:#92400E;
+    --line:#E4E4E7;
+    --muted:#71717A;
+    --warn:#92400E;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  .wrap{max-width:780px;margin:0 auto;padding:0 28px;}
+
+  header{padding:40px 0 20px;display:flex;justify-content:space-between;align-items:flex-start;}
+  .eyebrow{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin:0 0 8px;font-weight:600;}
+  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:32px;margin:0 0 6px;}
+  .sub{font-size:14px;color:var(--muted);margin:0;}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:22px 24px;margin-bottom:24px;}
+  .panel h2{font-family:'Source Serif 4',serif;font-size:18px;margin:0 0 16px;font-weight:600;}
+
+  .form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+  .form-row > div{flex:1;min-width:200px;}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);margin-bottom:5px;font-weight:600;}
+  input,textarea{
+    width:100%;font-family:'Inter',sans-serif;font-size:14px;
+    padding:9px 10px;border:1px solid var(--line);border-radius:5px;
+    background:var(--paper);color:var(--ink);
+  }
+  input:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  textarea{resize:vertical;min-height:60px;}
+  .btn{
+    font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
+    padding:10px 18px;border-radius:6px;cursor:pointer;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent-deep);}
+  .btn-primary{background:var(--ink);color:#fff;border:none;}
+  .btn-primary:hover{background:var(--accent-deep);color:#fff;}
+
+  .list-item{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:14px;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .list-item:last-child{border-bottom:none;}
+  .li-title{font-weight:600;font-size:15px;margin:0 0 4px;}
+  .li-tags{font-size:12px;color:var(--accent-deep);margin:0 0 4px;}
+  .li-desc{font-size:13px;color:var(--muted);margin:0;}
+  .li-actions button{
+    background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;
+    font-family:'JetBrains Mono',monospace;
+  }
+  .li-actions button:hover{color:#A33;}
+
+  .status{font-size:12px;color:var(--muted);margin-top:8px;}
+  .status.ok{color:#2E7D32;}
+  .status.err{color:#A33;}
+
+  #login-screen{max-width:360px;margin:80px auto;text-align:center;}
+  #login-screen .panel{text-align:left;}
+  #app-screen{display:none;}
+
+  footer{padding:10px 0 50px;font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="login-screen">
+    <p class="eyebrow">Admin login</p>
+    <div class="panel">
+      <h2>Sign in</h2>
+      <div class="form-row">
+        <div>
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" placeholder="you@example.com">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="login-pass">Password</label>
+          <input id="login-pass" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="login-btn" style="width:100%;">Sign in</button>
+      <p class="status err" id="login-status"></p>
+    </div>
+  </div>
+
+  <div id="app-screen">
+    <header>
+      <div>
+        <p class="eyebrow">Admin — not for client sharing</p>
+        <h1>Manage portfolio projects</h1>
+        <p class="sub">Changes here go live on the public page immediately.</p>
+      </div>
+      <button class="btn" id="logout-btn">Sign out</button>
+    </header>
+
+    <div class="panel">
+      <h2>Add a project</h2>
+      <div class="form-row">
+        <div>
+          <label for="p-title">Project title</label>
+          <input id="p-title" type="text" placeholder="e.g. Records Migration System">
+        </div>
+        <div>
+          <label for="p-tags">Tags (comma separated)</label>
+          <input id="p-tags" type="text" placeholder="e.g. Database, 2026, Client: Acme">
+        </div>
+      </div>
+      <div class="form-row">
+        <div style="flex:1 1 100%;">
+          <label for="p-desc">Description</label>
+          <textarea id="p-desc" placeholder="What was the project, and what did it solve?"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="p-link">Link (optional)</label>
+          <input id="p-link" type="text" placeholder="https://...">
+        </div>
+      </div>
+      <button class="btn btn-primary" id="add-btn">Add project</button>
+      <p class="status" id="add-status"></p>
+    </div>
+
+    <div class="panel">
+      <h2>Current projects (<span id="count">0</span>)</h2>
+      <div id="list"></div>
+    </div>
+
+    <footer>Bookmark this page — it isn't linked from the public site.</footer>
+  </div>
+
+</div>
+
+<script>
+  var auth = firebase.auth();
+  var db = firebase.firestore();
+
+  auth.onAuthStateChanged(function(user){
+    document.getElementById("login-screen").style.display = user ? "none" : "block";
+    document.getElementById("app-screen").style.display = user ? "block" : "none";
+    if(user){ listenToProjects(); }
+  });
+
+  document.getElementById("login-btn").addEventListener("click", function(){
+    var email = document.getElementById("login-email").value.trim();
+    var pass = document.getElementById("login-pass").value;
+    var statusEl = document.getElementById("login-status");
+    statusEl.textContent = "";
+    auth.signInWithEmailAndPassword(email, pass).catch(function(err){
+      statusEl.textContent = err.message;
+    });
+  });
+
+  document.getElementById("logout-btn").addEventListener("click", function(){
+    auth.signOut();
+  });
+
+  function escapeHtml(str){
+    return String(str || "").replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  var unsubscribe = null;
+  function listenToProjects(){
+    if(unsubscribe) unsubscribe();
+    unsubscribe = db.collection("projects").orderBy("createdAt", "asc").onSnapshot(function(snapshot){
+      var projects = [];
+      snapshot.forEach(function(doc){
+        var data = doc.data();
+        data._id = doc.id;
+        projects.push(data);
+      });
+      renderList(projects);
+    });
+  }
+
+  function renderList(projects){
+    var list = document.getElementById("list");
+    document.getElementById("count").textContent = projects.length;
+
+    if(projects.length === 0){
+      list.innerHTML = '<p class="li-desc">No projects yet. Add one above.</p>';
+      return;
+    }
+
+    list.innerHTML = projects.slice().reverse().map(function(p){
+      return '<div class="list-item">' +
+        '<div>' +
+          '<p class="li-title">' + escapeHtml(p.title) + '</p>' +
+          '<p class="li-tags">' + (p.tags || []).map(escapeHtml).join(" · ") + '</p>' +
+          '<p class="li-desc">' + escapeHtml(p.desc) + '</p>' +
+        '</div>' +
+        '<div class="li-actions"><button data-id="' + p._id + '">remove</button></div>' +
+      '</div>';
+    }).join("");
+
+    list.querySelectorAll("button[data-id]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        db.collection("projects").doc(btn.getAttribute("data-id")).delete();
+      });
+    });
+  }
+
+  document.getElementById("add-btn").addEventListener("click", function(){
+    var title = document.getElementById("p-title").value.trim();
+    var tagsRaw = document.getElementById("p-tags").value.trim();
+    var desc = document.getElementById("p-desc").value.trim();
+    var link = document.getElementById("p-link").value.trim();
+    var statusEl = document.getElementById("add-status");
+
+    if(!title || !desc){
+      statusEl.className = "status err";
+      statusEl.textContent = "Please add at least a title and description.";
+      return;
+    }
+
+    var tags = tagsRaw ? tagsRaw.split(",").map(function(t){ return t.trim(); }).filter(Boolean) : [];
+
+    db.collection("projects").add({
+      title: title,
+      tags: tags,
+      desc: desc,
+      link: link,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      statusEl.className = "status ok";
+      statusEl.textContent = "Project added — live on the public page now.";
+      document.getElementById("p-title").value = "";
+      document.getElementById("p-tags").value = "";
+      document.getElementById("p-desc").value = "";
+      document.getElementById("p-link").value = "";
+    }).catch(function(err){
+      statusEl.className = "status err";
+      statusEl.textContent = err.message;
+    });
+  });
+</script>
+</body>
+</html>
