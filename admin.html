@@ -10,7 +10,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <style>
-    /* ----- reset & base ----- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --ink: #18181B;
@@ -28,18 +27,15 @@
       color: var(--ink);
       font-family: 'Inter', sans-serif;
       line-height: 1.6;
-      padding: 0 0 2px;
       -webkit-font-smoothing: antialiased;
     }
     .wrap { max-width: 960px; margin: 0 auto; padding: 0 28px; }
 
-    /* header */
     header {
       border-bottom: 1px solid var(--line);
       padding: 32px 0 20px;
       background: rgba(250,250,250,0.7);
       backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -50,11 +46,7 @@
       font-size: 28px;
       letter-spacing: -0.02em;
     }
-    header .sub {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
+    header .sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
     .admin-badge {
       display: inline-block;
       background: var(--accent);
@@ -68,13 +60,11 @@
       margin-left: 12px;
     }
 
-    /* login overlay */
     #login-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.3);
       backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -128,16 +118,9 @@
       display: none;
     }
 
-    /* admin panel */
     #admin-panel { display: none; }
     #admin-panel.active { display: block; }
 
-    .admin-toolbar {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 24px 0 20px;
-    }
     .btn {
       padding: 10px 20px;
       border-radius: 30px;
@@ -172,12 +155,12 @@
     }
     .btn-success:hover { background: #15803D; }
 
-    /* tabs */
     .tabs {
       display: flex;
       gap: 4px;
       border-bottom: 1px solid var(--line);
       margin-top: 28px;
+      flex-wrap: wrap;
     }
     .tab-btn {
       padding: 10px 18px;
@@ -189,7 +172,6 @@
       color: var(--muted);
       cursor: pointer;
       border-bottom: 2px solid transparent;
-      transform: translateY(1px);
       transition: color 0.2s, border-color 0.2s;
     }
     .tab-btn:hover { color: var(--ink); }
@@ -200,7 +182,6 @@
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* form */
     .form-card {
       background: white;
       border: 1px solid var(--line);
@@ -208,10 +189,7 @@
       padding: 28px 30px;
       margin-bottom: 32px;
       box-shadow: var(--shadow);
-      display: none;
     }
-    .form-card.open { display: block; }
-    .form-card.static { display: block; }
     .form-card h3 {
       font-family: 'Source Serif 4', serif;
       font-weight: 600;
@@ -264,9 +242,12 @@
       margin-top: 10px;
       display: none;
       color: #15803D;
+      padding: 10px;
+      background: #DCFCE7;
+      border-radius: 8px;
     }
+    .save-msg.show { display: block; }
 
-    /* Drag & Drop Image Upload */
     .drop-zone {
       border: 2px dashed var(--line);
       border-radius: 10px;
@@ -285,7 +266,6 @@
     .drop-zone .placeholder-text { color: var(--muted); font-size: 14px; }
     .drop-zone .file-input { display: none; }
 
-    /* project list */
     .project-list { margin-top: 8px; }
     .project-item {
       background: white;
@@ -324,8 +304,6 @@
       padding: 6px 16px;
       font-size: 12px;
     }
-    .btn-sm { padding: 6px 14px; font-size: 12px; }
-
     .empty-state {
       text-align: center;
       color: var(--muted);
@@ -333,7 +311,6 @@
       font-style: italic;
     }
 
-    /* About paragraphs */
     .paragraph-item {
       background: var(--card);
       border-radius: 10px;
@@ -367,7 +344,6 @@
       font-size: 11px;
     }
 
-    /* documents */
     .doc-upload-row {
       display: grid;
       grid-template-columns: 1fr 1fr auto;
@@ -414,6 +390,17 @@
     footer a { color: var(--accent-deep); text-decoration: none; }
     footer a:hover { color: var(--accent); }
 
+    .error-banner {
+      background: #FEE2E2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-banner.show { display: block; }
+
     @media (max-width: 600px) {
       .form-row { grid-template-columns: 1fr; }
       .doc-upload-row { grid-template-columns: 1fr; }
@@ -428,7 +415,7 @@
 <!-- ===== LOGIN OVERLAY ===== -->
 <div id="login-overlay">
   <div class="login-box">
-    <h2>Admin access</h2>
+    <h2>🔐 Admin Access</h2>
     <p>Enter your password to manage your portfolio</p>
     <input type="password" id="admin-pw" placeholder="Password" />
     <button id="login-btn">Unlock</button>
@@ -442,8 +429,13 @@
 
     <header>
       <h1>⚙️ Portfolio Admin <span class="admin-badge">protected</span></h1>
-      <div class="sub">Manage projects, about section, contact info &amp; documents</div>
+      <div class="sub">Manage your portfolio content</div>
     </header>
+
+    <div id="firebase-error" class="error-banner">
+      ⚠️ Firebase is having trouble connecting. Your changes may not save properly.
+      <br><small>Check your internet connection and Firebase security rules.</small>
+    </div>
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="projects">📁 Projects</button>
@@ -453,18 +445,16 @@
 
     <!-- ===================== PROJECTS TAB ===================== -->
     <div class="tab-panel active" id="tab-projects">
-
-      <div class="admin-toolbar">
+      <div style="margin:24px 0 20px;">
         <button class="btn btn-primary" id="show-add-form">＋ Add new project</button>
         <button class="btn btn-outline" id="refresh-list">⟳ Refresh</button>
       </div>
 
-      <!-- add / edit form -->
-      <div class="form-card" id="project-form">
+      <div class="form-card" id="project-form" style="display:none;">
         <h3 id="form-title">Add project</h3>
         <input type="hidden" id="edit-id" />
         <div class="form-group">
-          <label>Project title</label>
+          <label>Project title *</label>
           <input type="text" id="f-title" placeholder="e.g. Library Catalog System" />
         </div>
         <div class="form-group">
@@ -492,9 +482,9 @@
           <button class="btn btn-primary" id="save-project">💾 Save project</button>
           <button class="btn btn-outline" id="cancel-edit">Cancel</button>
         </div>
+        <div class="save-msg" id="project-save-msg">✅ Project saved successfully!</div>
       </div>
 
-      <!-- project list -->
       <div class="project-list" id="project-list">
         <div class="empty-state">Loading projects…</div>
       </div>
@@ -502,9 +492,9 @@
 
     <!-- ===================== SITE INFO TAB ===================== -->
     <div class="tab-panel" id="tab-siteinfo">
-      <div class="form-card static">
+      <div class="form-card">
         <h3>About Section</h3>
-        <div class="hint">Add multiple paragraphs for your "About" section. Each paragraph will appear as a separate block.</div>
+        <div class="hint">Add multiple paragraphs for your "About" section.</div>
 
         <div class="form-group">
           <label>Tagline (shown in italics at the top)</label>
@@ -513,9 +503,7 @@
 
         <div class="form-group">
           <label>About Paragraphs</label>
-          <div id="paragraphs-container">
-            <!-- Paragraphs will be added here dynamically -->
-          </div>
+          <div id="paragraphs-container"></div>
           <button class="btn btn-outline btn-sm" id="add-paragraph" style="margin-top:8px;">＋ Add paragraph</button>
         </div>
 
@@ -544,9 +532,9 @@
 
     <!-- ===================== DOCUMENTS TAB ===================== -->
     <div class="tab-panel" id="tab-documents">
-      <div class="form-card static">
+      <div class="form-card">
         <h3>Upload a document</h3>
-        <div class="hint">Upload your resume, CV, or certificates. These will appear as downloadable files on your portfolio.</div>
+        <div class="hint">Upload your resume, CV, or certificates.</div>
 
         <div class="doc-upload-row">
           <div class="form-group" style="margin-bottom:0;">
@@ -559,10 +547,10 @@
           </div>
           <div class="form-group" style="margin-bottom:0;">
             <label>Label (optional)</label>
-            <input type="text" id="doc-label" placeholder="e.g. AWS Certified Cloud Practitioner" />
+            <input type="text" id="doc-label" placeholder="e.g. AWS Certified" />
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label>File (PDF, image, doc)</label>
+            <label>File</label>
             <input type="file" id="doc-file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
           </div>
         </div>
@@ -572,6 +560,7 @@
         <div class="form-actions">
           <button class="btn btn-primary" id="doc-upload-btn">⬆ Upload</button>
         </div>
+        <div class="save-msg" id="doc-save-msg">✅ Document uploaded successfully!</div>
       </div>
 
       <div class="project-list" id="doc-list">
@@ -588,9 +577,9 @@
 </div>
 
 <script>
-  /* =========================================================
-     FIREBASE CONFIG – same as your portfolio
-     ========================================================= */
+  // =========================================================
+  // FIREBASE CONFIG
+  // =========================================================
   const firebaseConfig = {
     apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
     authDomain: "portfolio-management-ed2d5.firebaseapp.com",
@@ -602,13 +591,25 @@
     measurementId: "G-X797LW4YQB"
   };
 
+  const ADMIN_PASSWORD = 'anthony2026';
+  let db = null;
+  let storage = null;
+  let firebaseReady = false;
+  let projects = [];
+  let documents = [];
+  let editingId = null;
+  let paragraphCounter = 0;
+
   // ----- DOM refs -----
   const loginOverlay = document.getElementById('login-overlay');
   const adminPanel = document.getElementById('admin-panel');
   const loginBtn = document.getElementById('login-btn');
   const loginPw = document.getElementById('admin-pw');
   const loginError = document.getElementById('login-error');
+  const logoutBtn = document.getElementById('logout-btn');
+  const firebaseError = document.getElementById('firebase-error');
 
+  // Projects
   const projectList = document.getElementById('project-list');
   const formCard = document.getElementById('project-form');
   const formTitle = document.getElementById('form-title');
@@ -622,9 +623,9 @@
   const cancelBtn = document.getElementById('cancel-edit');
   const showAddBtn = document.getElementById('show-add-form');
   const refreshBtn = document.getElementById('refresh-list');
-  const logoutBtn = document.getElementById('logout-btn');
+  const projectSaveMsg = document.getElementById('project-save-msg');
 
-  // Site info refs
+  // Site info
   const sTagline = document.getElementById('s-tagline');
   const sEmail = document.getElementById('s-email');
   const sLinkedin = document.getElementById('s-linkedin');
@@ -640,7 +641,7 @@
   const imagePreview = document.getElementById('image-preview');
   const fileInput = document.getElementById('f-image-file');
 
-  // Documents refs
+  // Documents
   const docCategory = document.getElementById('doc-category');
   const docLabel = document.getElementById('doc-label');
   const docFile = document.getElementById('doc-file');
@@ -648,29 +649,29 @@
   const docProgress = document.getElementById('doc-progress');
   const docProgressBar = document.getElementById('doc-progress-bar');
   const docList = document.getElementById('doc-list');
+  const docSaveMsg = document.getElementById('doc-save-msg');
 
-  // ----- state -----
-  const ADMIN_PASSWORD = 'anthony2026';
-  let db = null;
-  let storage = null;
-  let projects = [];
-  let documents = [];
-  let editingId = null;
-
-  // ----- init firebase -----
+  // =========================================================
+  // INIT FIREBASE
+  // =========================================================
   function initFirebase() {
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
       storage = firebase.storage();
+      firebaseReady = true;
+      firebaseError.classList.remove('show');
       return true;
     } catch (e) {
-      alert('Firebase init error: ' + e.message);
+      firebaseError.classList.add('show');
+      firebaseError.innerHTML = '⚠️ Firebase error: ' + e.message + '<br><small>You can still use the admin panel, but data won\'t save to the cloud.</small>';
       return false;
     }
   }
 
-  // ----- tabs -----
+  // =========================================================
+  // TABS
+  // =========================================================
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -680,16 +681,22 @@
     });
   });
 
-  // ----- login -----
+  // =========================================================
+  // LOGIN
+  // =========================================================
   loginBtn.addEventListener('click', function() {
     const pw = loginPw.value.trim();
     if (pw === ADMIN_PASSWORD) {
       loginOverlay.classList.add('hidden');
       adminPanel.classList.add('active');
-      if (initFirebase()) {
+      initFirebase();
+      if (firebaseReady) {
         loadProjects();
         loadSettings();
         loadDocuments();
+      } else {
+        projectList.innerHTML = '<div class="empty-state">⚠️ Firebase not available. Check your connection.</div>';
+        docList.innerHTML = '<div class="empty-state">⚠️ Firebase not available. Check your connection.</div>';
       }
     } else {
       loginError.style.display = 'block';
@@ -702,20 +709,17 @@
     if (e.key === 'Enter') loginBtn.click();
   });
 
-  // ----- logout -----
   logoutBtn.addEventListener('click', function(e) {
     e.preventDefault();
     adminPanel.classList.remove('active');
     loginOverlay.classList.remove('hidden');
     loginPw.value = '';
     loginError.style.display = 'none';
-    projects = [];
-    projectList.innerHTML = '<div class="empty-state">Loading projects…</div>';
   });
 
-  // ========================================================
+  // =========================================================
   // IMAGE DRAG & DROP
-  // ========================================================
+  // =========================================================
   dropZone.addEventListener('click', () => fileInput.click());
 
   dropZone.addEventListener('dragover', (e) => {
@@ -749,31 +753,32 @@
       imagePreview.src = e.target.result;
       imagePreview.style.display = 'block';
       dropText.textContent = file.name + ' (click to change)';
-      fImage.value = e.target.result; // Store base64 for preview
+      fImage.value = e.target.result;
       
-      // Upload to Firebase Storage
-      if (storage) {
+      // Try to upload to Firebase Storage
+      if (firebaseReady && storage) {
         const path = 'project_images/' + Date.now() + '_' + file.name;
         const ref = storage.ref(path);
         ref.put(file).then((snap) => {
           return snap.ref.getDownloadURL();
         }).then((url) => {
-          fImage.value = url; // Store the actual URL
-          console.log('Image uploaded:', url);
-        }).catch((err) => {
-          console.warn('Storage upload failed, using base64:', err.message);
-          // Fallback to base64 if storage fails
+          fImage.value = url;
+        }).catch(() => {
+          // Keep base64 if storage fails
         });
       }
     };
     reader.readAsDataURL(file);
   }
 
-  // ========================================================
+  // =========================================================
   // PROJECTS
-  // ========================================================
+  // =========================================================
   function loadProjects() {
-    if (!db) return;
+    if (!firebaseReady || !db) {
+      projectList.innerHTML = '<div class="empty-state">⚠️ Firebase not available</div>';
+      return;
+    }
     db.collection('projects').onSnapshot((snapshot) => {
       const list = [];
       snapshot.forEach(doc => {
@@ -789,7 +794,7 @@
       projects = list;
       renderList();
     }, (err) => {
-      projectList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+      projectList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error: ${err.message}</div>`;
     });
   }
 
@@ -806,7 +811,6 @@
           <div class="project-info">
             <strong>${escapeHtml(p.title || 'Untitled')}</strong>
             <span class="meta">${escapeHtml(p.desc || '')} ${tags ? '· ' + escapeHtml(tags) : ''}</span>
-            ${p.image ? `<span class="meta" style="font-size:11px;">🖼️ Image attached</span>` : ''}
           </div>
           <div class="project-actions">
             <button class="btn btn-outline btn-sm" data-id="${p._id}" data-action="edit">✎ Edit</button>
@@ -837,26 +841,26 @@
     fLink.value = p.link || '';
     fTags.value = (p.tags || []).join(', ');
     
-    // Show image preview if exists
     if (p.image) {
       imagePreview.src = p.image;
       imagePreview.style.display = 'block';
       dropText.textContent = 'Current image (click to change)';
     }
     
-    formCard.classList.add('open');
+    formCard.style.display = 'block';
     formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    projectSaveMsg.classList.remove('show');
   }
 
   function deleteProject(id) {
-    if (!db) return;
+    if (!firebaseReady || !db) { alert('Firebase not available'); return; }
     if (!confirm('Delete this project permanently?')) return;
     db.collection('projects').doc(id).delete()
       .catch(err => alert('Delete error: ' + err.message));
   }
 
   function saveProject() {
-    if (!db) return;
+    if (!firebaseReady || !db) { alert('Firebase not available. Cannot save.'); return; }
     const title = fTitle.value.trim();
     if (!title) { alert('Title is required.'); return; }
 
@@ -875,11 +879,13 @@
 
     promise.then(() => {
       resetForm();
+      projectSaveMsg.classList.add('show');
+      setTimeout(() => projectSaveMsg.classList.remove('show'), 3000);
     }).catch(err => alert('Save error: ' + err.message));
   }
 
   function resetForm() {
-    formCard.classList.remove('open');
+    formCard.style.display = 'none';
     editId.value = '';
     fTitle.value = '';
     fDesc.value = '';
@@ -892,31 +898,23 @@
     fileInput.value = '';
     editingId = null;
     formTitle.textContent = 'Add project';
+    projectSaveMsg.classList.remove('show');
   }
 
   showAddBtn.addEventListener('click', () => {
     resetForm();
-    formCard.classList.add('open');
+    formCard.style.display = 'block';
     formTitle.textContent = '＋ Add project';
     fTitle.focus();
   });
 
   cancelBtn.addEventListener('click', resetForm);
   saveBtn.addEventListener('click', saveProject);
+  refreshBtn.addEventListener('click', () => { if (firebaseReady) loadProjects(); });
 
-  refreshBtn.addEventListener('click', () => {
-    if (db) loadProjects();
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && formCard.classList.contains('open')) resetForm();
-  });
-
-  // ========================================================
-  // SITE INFO with dynamic paragraphs
-  // ========================================================
-  let paragraphCounter = 0;
-
+  // =========================================================
+  // SITE INFO WITH PARAGRAPHS
+  // =========================================================
   function addParagraph(text = '') {
     const id = 'p-' + (++paragraphCounter);
     const div = document.createElement('div');
@@ -958,7 +956,7 @@
   addParagraphBtn.addEventListener('click', () => addParagraph());
 
   function loadSettings() {
-    if (!db) return;
+    if (!firebaseReady || !db) return;
     db.collection('settings').doc('site').get().then(doc => {
       const data = doc.exists ? doc.data() : {};
       sTagline.value = data.tagline || '';
@@ -966,24 +964,22 @@
       sLinkedin.value = data.linkedin || '';
       sPhone.value = data.phone || '';
       
-      // Load paragraphs
       const paragraphs = data.paragraphs || [];
       paragraphsContainer.innerHTML = '';
       paragraphCounter = 0;
       if (paragraphs.length) {
         paragraphs.forEach(p => addParagraph(p));
       } else {
-        addParagraph(''); // Default empty paragraph
+        addParagraph('');
       }
     }).catch(err => {
-      console.error('Could not load settings:', err.message);
+      console.warn('Could not load settings:', err.message);
     });
   }
 
   saveSettingsBtn.addEventListener('click', function() {
-    if (!db) return;
+    if (!firebaseReady || !db) { alert('Firebase not available. Cannot save.'); return; }
     
-    // Collect paragraphs
     const paragraphTexts = [];
     paragraphsContainer.querySelectorAll('.paragraph-text').forEach(textarea => {
       const val = textarea.value.trim();
@@ -1001,17 +997,20 @@
     
     db.collection('settings').doc('site').set(data, { merge: true })
       .then(() => {
-        settingsSaveMsg.style.display = 'block';
-        setTimeout(() => { settingsSaveMsg.style.display = 'none'; }, 2200);
+        settingsSaveMsg.classList.add('show');
+        setTimeout(() => settingsSaveMsg.classList.remove('show'), 3000);
       })
       .catch(err => alert('Save error: ' + err.message));
   });
 
-  // ========================================================
+  // =========================================================
   // DOCUMENTS
-  // ========================================================
+  // =========================================================
   function loadDocuments() {
-    if (!db) return;
+    if (!firebaseReady || !db) {
+      docList.innerHTML = '<div class="empty-state">⚠️ Firebase not available</div>';
+      return;
+    }
     db.collection('documents').onSnapshot((snapshot) => {
       const list = [];
       snapshot.forEach(doc => {
@@ -1027,7 +1026,7 @@
       documents = list;
       renderDocList();
     }, (err) => {
-      docList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+      docList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error: ${err.message}</div>`;
     });
   }
 
@@ -1068,10 +1067,7 @@
     if (d.storagePath && storage) {
       storage.ref(d.storagePath).delete()
         .then(removeRecord)
-        .catch(err => {
-          console.warn('Storage delete warning:', err.message);
-          removeRecord();
-        })
+        .catch(() => removeRecord())
         .catch(err => alert('Delete error: ' + err.message));
     } else {
       removeRecord().catch(err => alert('Delete error: ' + err.message));
@@ -1079,7 +1075,11 @@
   }
 
   docUploadBtn.addEventListener('click', function() {
-    if (!storage || !db) return;
+    if (!firebaseReady || !storage || !db) { 
+      alert('Firebase not available. Cannot upload.'); 
+      return; 
+    }
+    
     const file = docFile.files[0];
     if (!file) { alert('Choose a file first.'); return; }
 
@@ -1092,6 +1092,7 @@
     docProgress.style.display = 'block';
     docProgressBar.style.width = '0%';
     docUploadBtn.disabled = true;
+    docSaveMsg.classList.remove('show');
 
     task.on('state_changed', (snap) => {
       const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
@@ -1115,6 +1116,8 @@
         docUploadBtn.disabled = false;
         docFile.value = '';
         docLabel.value = '';
+        docSaveMsg.classList.add('show');
+        setTimeout(() => docSaveMsg.classList.remove('show'), 3000);
       }).catch(err => {
         docProgress.style.display = 'none';
         docUploadBtn.disabled = false;
@@ -1123,7 +1126,9 @@
     });
   });
 
-  // ----- helpers -----
+  // =========================================================
+  // HELPERS
+  // =========================================================
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>"']/g, c => ({
@@ -1131,7 +1136,7 @@
     })[c]);
   }
 
-  console.log('✅ Admin panel ready — default password: anthony2026');
+  console.log('✅ Admin panel ready — password: anthony2026');
 </script>
 </body>
 </html>
