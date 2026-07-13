@@ -3,271 +3,365 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Anthony Njau — Portfolio</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Admin · Anthony Njau Portfolio</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <style>
-  :root{
-    --ink:#18181B;
-    --paper:#FAFAFA;
-    --card:#F4F4F5;
-    --accent:#D97706;
-    --accent-deep:#92400E;
-    --line:#E4E4E7;
-    --muted:#71717A;
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAFA; padding: 40px 20px; }
+  .wrap { max-width: 500px; margin: 0 auto; }
+  .login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    border: 1px solid #E4E4E7;
   }
-  *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
-  .wrap{max-width:880px;margin:0 auto;padding:0 28px;}
-
-  header{border-bottom:1px solid var(--line);padding:52px 0 30px;position:sticky;top:0;background:var(--paper);z-index:10;transition:padding 0.25s ease, box-shadow 0.25s ease;}
-  header.scrolled{padding:18px 0;box-shadow:0 1px 0 var(--line);}
-  header.scrolled h1{font-size:22px;}
-  header.scrolled .role,header.scrolled .eyebrow{display:none;}
-  .eyebrow{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;font-weight:600;}
-  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:44px;margin:0 0 6px;letter-spacing:-0.01em;}
-  .role{font-size:16px;color:var(--muted);margin:0;}
-  nav{margin-top:24px;display:flex;gap:24px;flex-wrap:wrap;}
-  nav a{font-size:13px;letter-spacing:0.04em;color:var(--ink);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:3px;}
-  nav a:hover{border-bottom-color:var(--accent);color:var(--accent-deep);}
-
-  .about{padding:44px 0 38px;border-bottom:1px solid var(--line);}
-  .about p{font-size:16px;max-width:640px;margin:0 0 14px;}
-  .about p:last-child{margin-bottom:0;}
-  .tagline{font-family:'Source Serif 4',serif;font-style:italic;color:var(--accent-deep);font-size:18px;}
-
-  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:48px 0 22px;}
-  .section-head h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:24px;margin:0;}
-  .count{font-size:12px;color:var(--muted);}
-
-  #projects{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;padding-bottom:30px;}
-  .card{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:10px;overflow:hidden;
-    box-shadow:0 1px 3px rgba(0,0,0,0.04);
-    opacity:0;transform:translateY(28px) scale(0.96);
-    transition:opacity 0.6s cubic-bezier(.16,1,.3,1), transform 0.6s cubic-bezier(.16,1,.3,1), box-shadow 0.25s ease;
-    display:flex;flex-direction:column;
+  .login-box h2 { margin-bottom: 8px; }
+  .login-box p { color: #71717A; margin-bottom: 20px; }
+  .login-box input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #E4E4E7;
+    border-radius: 10px;
+    font-size: 15px;
+    margin-bottom: 12px;
   }
-  .card:hover{box-shadow:0 10px 24px rgba(0,0,0,0.10);transform:translateY(-3px) scale(1);}
-  .card.visible{opacity:1;transform:translateY(0) scale(1);}
-  .card-img-wrap{overflow:hidden;}
-  .card-img{width:100%;height:160px;background:var(--line);object-fit:cover;display:block;transition:transform 0.5s ease;}
-  .card:hover .card-img{transform:scale(1.08);}
-  .card-img-placeholder{
-    width:100%;height:160px;background:var(--line);display:flex;
-    align-items:center;justify-content:center;color:var(--muted);font-size:12px;
+  .login-box button {
+    width: 100%;
+    padding: 12px;
+    background: #D97706;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
   }
-  .card-body{padding:16px 18px 18px;border-top:3px solid var(--accent);flex:1;display:flex;flex-direction:column;}
-  .card-title{font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;margin:0 0 8px;}
-  .card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  .tag{font-size:11px;color:var(--accent-deep);background:#FDF3E3;padding:3px 9px;border-radius:12px;font-weight:500;}
-  .card-desc{font-size:14px;color:#33363D;margin:0 0 12px;flex:1;}
-  .card-link{font-size:13px;color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--accent);align-self:flex-start;}
-  .card-link:hover{color:var(--accent);}
-  .empty,.error{font-size:14px;color:var(--muted);font-style:italic;padding:18px 0;grid-column:1/-1;}
-  .error{color:#B91C1C;}
-
-  footer{margin-top:50px;padding:24px 0 50px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-  footer a{color:var(--accent-deep);text-decoration:none;}
-  footer a:hover{color:var(--accent);}
-
-  @media (max-width:560px){ h1{font-size:32px;} }
+  .login-box button:hover { background: #92400E; }
+  .error { color: #B91C1C; font-size: 13px; margin-top: 10px; display: none; }
+  .success { color: #16A34A; font-size: 13px; margin-top: 10px; display: none; }
+  .admin-panel { display: none; margin-top: 20px; }
+  .admin-panel.active { display: block; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-weight: 500; font-size: 13px; margin-bottom: 4px; }
+  .form-group input, .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #E4E4E7;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  .btn {
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: 1px solid #E4E4E7;
+    background: white;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-primary { background: #D97706; color: white; border-color: #D97706; }
+  .btn-primary:hover { background: #92400E; }
+  .btn-danger { background: #DC2626; color: white; border-color: #DC2626; }
+  .btn-danger:hover { background: #B91C1C; }
+  .logout-btn { float: right; }
+  .tab { margin-top: 20px; }
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <header>
-    <p class="eyebrow">Portfolio · Information Science</p>
-    <h1>Anthony Njau</h1>
-    <p class="role">BSc Information Science</p>
-    <nav>
-      <a href="#about">About</a>
-      <a href="#projects">Projects</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
-
-  <section class="about" id="about">
-    <p class="tagline" id="about-tagline">"Information is only valuable once it's organized, accessible, and trusted."</p>
-    <div id="about-content">
-      <p>Anthony Njau holds a BSc in Information Science and works at the intersection of data, systems, and structure — turning scattered information into something people can actually find, understand, and use.</p>
-      <p>His background combines a grounding in information organization and retrieval with a practical, hands-on approach to building and managing systems that hold up under real-world use. He's drawn to problems where clarity is the missing piece: messy data, disconnected processes, or tools that don't quite fit how people actually work.</p>
-      <p>This page is a living record of that work — updated as new projects come together.</p>
-    </div>
-  </section>
-
-  <div class="section-head">
-    <h2>Projects</h2>
-    <span class="count" id="proj-count"></span>
+  <div class="login-box" id="login-box">
+    <h2>🔐 Admin Access</h2>
+    <p>Enter your password to manage your portfolio</p>
+    <input type="password" id="admin-pw" placeholder="Password" />
+    <button id="login-btn">Unlock</button>
+    <div id="login-error" class="error">Incorrect password</div>
   </div>
 
-  <div id="projects"></div>
+  <div class="admin-panel" id="admin-panel">
+    <div style="background:white; padding:20px; border-radius:16px; border:1px solid #E4E4E7; margin-bottom:20px;">
+      <h3>⚙️ Admin Panel <span style="font-size:12px; color:#71717A; font-weight:normal;">(protected)</span></h3>
+      <button class="btn btn-danger logout-btn" id="logout-btn" style="font-size:12px;">Logout</button>
+      <div style="clear:both;"></div>
+    </div>
 
-  <footer id="contact">
-    <span>Anthony Njau — Information Science</span>
-    <span id="contact-info">
-      <a href="mailto:njaunanthony9@gmail.com">njaunanthony9@gmail.com</a> · 
-      <a href="https://www.linkedin.com/in/anthony-njau-9456262" target="_blank">LinkedIn</a>
-    </span>
-  </footer>
+    <!-- Projects Section -->
+    <div style="background:white; padding:24px; border-radius:16px; border:1px solid #E4E4E7; margin-bottom:20px;">
+      <h4>📁 Projects</h4>
+      <div style="margin:16px 0;">
+        <button class="btn btn-primary" id="show-add-form">+ Add Project</button>
+      </div>
+      <div id="project-form" style="display:none; border-top:1px solid #E4E4E7; padding-top:16px; margin-top:16px;">
+        <div class="form-group">
+          <label>Title</label>
+          <input type="text" id="f-title" />
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="f-desc" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="text" id="f-image" />
+        </div>
+        <div class="form-group">
+          <label>Project Link</label>
+          <input type="text" id="f-link" />
+        </div>
+        <div class="form-group">
+          <label>Tags (comma separated)</label>
+          <input type="text" id="f-tags" />
+        </div>
+        <button class="btn btn-primary" id="save-project">Save Project</button>
+        <button class="btn" id="cancel-edit" style="margin-left:10px;">Cancel</button>
+        <div id="project-success" class="success" style="margin-top:10px;">✅ Project saved!</div>
+      </div>
+      <div id="project-list" style="margin-top:12px;">
+        <div style="color:#71717A; font-style:italic;">Loading projects...</div>
+      </div>
+    </div>
 
+    <!-- About & Contact Section -->
+    <div style="background:white; padding:24px; border-radius:16px; border:1px solid #E4E4E7; margin-bottom:20px;">
+      <h4>✏️ About & Contact</h4>
+      <div class="form-group">
+        <label>Tagline</label>
+        <input type="text" id="about-tagline" placeholder="Your tagline here" />
+      </div>
+      <div class="form-group">
+        <label>About Text</label>
+        <textarea id="about-text" rows="4" placeholder="Write your about content..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="contact-email" placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label>LinkedIn URL</label>
+        <input type="text" id="contact-linkedin" placeholder="https://linkedin.com/in/..." />
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="text" id="contact-phone" placeholder="+1234567890" />
+      </div>
+      <button class="btn btn-primary" id="save-about">Save About & Contact</button>
+      <div id="about-success" class="success" style="margin-top:10px;">✅ Saved successfully!</div>
+    </div>
+  </div>
 </div>
 
 <script>
-/* =========================================================
-   FIREBASE CONFIG — REPLACE THESE VALUES WITH YOUR OWN
-   ========================================================= */
-var firebaseConfig = {
-  apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
-  authDomain: "portfolio-management-ed2d5.firebaseapp.com",
-  databaseURL: "https://portfolio-management-ed2d5-default-rtdb.firebaseio.com",
-  projectId: "portfolio-management-ed2d5",
-  storageBucket: "portfolio-management-ed2d5.firebasestorage.app",
-  messagingSenderId: "307935862567",
-  appId: "1:307935862567:web:9a3dce523d134c96bbd302",
-  measurementId: "G-X797LW4YQB"
-};
+  // Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
+    authDomain: "portfolio-management-ed2d5.firebaseapp.com",
+    databaseURL: "https://portfolio-management-ed2d5-default-rtdb.firebaseio.com",
+    projectId: "portfolio-management-ed2d5",
+    storageBucket: "portfolio-management-ed2d5.firebasestorage.app",
+    messagingSenderId: "307935862567",
+    appId: "1:307935862567:web:9a3dce523d134c96bbd302",
+    measurementId: "G-X797LW4YQB"
+  };
 
-var projectsEl = document.getElementById("projects");
-var countEl = document.getElementById("proj-count");
+  const ADMIN_PASSWORD = 'anthony2026';
+  let db = null;
 
-function showError(msg){
-  projectsEl.innerHTML = '<p class="error">' + msg + '</p>';
-  countEl.textContent = "";
-}
+  // DOM refs
+  const loginBox = document.getElementById('login-box');
+  const adminPanel = document.getElementById('admin-panel');
+  const loginBtn = document.getElementById('login-btn');
+  const loginPw = document.getElementById('admin-pw');
+  const loginError = document.getElementById('login-error');
+  const logoutBtn = document.getElementById('logout-btn');
 
-// Guard: SDK scripts failed to load
-if (typeof firebase === "undefined") {
-  showError("Firebase SDK failed to load. Check your internet connection or ad blocker.");
-} else if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-  showError("Firebase isn't configured yet — replace the placeholder values in firebaseConfig with your real project credentials from the Firebase Console.");
-} else {
-  try {
-    firebase.initializeApp(firebaseConfig);
-    var db = firebase.firestore();
+  // Projects
+  const projectList = document.getElementById('project-list');
+  const formCard = document.getElementById('project-form');
+  const fTitle = document.getElementById('f-title');
+  const fDesc = document.getElementById('f-desc');
+  const fImage = document.getElementById('f-image');
+  const fLink = document.getElementById('f-link');
+  const fTags = document.getElementById('f-tags');
+  const saveBtn = document.getElementById('save-project');
+  const cancelBtn = document.getElementById('cancel-edit');
+  const showAddBtn = document.getElementById('show-add-form');
+  const projectSuccess = document.getElementById('project-success');
 
-    // Load About & Contact info from Firestore
-    db.collection("settings").doc("about").onSnapshot(function(doc) {
-      if (doc.exists) {
-        var data = doc.data();
-        // Update tagline
-        var taglineEl = document.getElementById("about-tagline");
-        if (data.tagline) {
-          taglineEl.textContent = '"' + data.tagline + '"';
-        }
-        
-        // Update about content
-        var aboutContent = document.getElementById("about-content");
-        if (data.text) {
-          // Split by <br> tags or newlines
-          var paragraphs = data.text.split(/\n|<br\s*\/?>/).filter(p => p.trim() !== '');
-          aboutContent.innerHTML = paragraphs.map(p => '<p>' + p.trim() + '</p>').join('');
-        }
-        
-        // Update contact info
-        var contactInfo = document.getElementById("contact-info");
-        var contactParts = [];
-        if (data.email) {
-          contactParts.push('<a href="mailto:' + data.email + '">' + data.email + '</a>');
-        }
-        if (data.linkedin) {
-          contactParts.push('<a href="' + data.linkedin + '" target="_blank">LinkedIn</a>');
-        }
-        if (data.phone) {
-          contactParts.push('<span>' + data.phone + '</span>');
-        }
-        if (contactParts.length > 0) {
-          contactInfo.innerHTML = contactParts.join(' · ');
-        }
-      }
-    }, function(err) {
-      console.warn("Could not load about info:", err.message);
-    });
+  // About
+  const aboutTagline = document.getElementById('about-tagline');
+  const aboutText = document.getElementById('about-text');
+  const contactEmail = document.getElementById('contact-email');
+  const contactLinkedin = document.getElementById('contact-linkedin');
+  const contactPhone = document.getElementById('contact-phone');
+  const saveAboutBtn = document.getElementById('save-about');
+  const aboutSuccess = document.getElementById('about-success');
 
-    // Load Projects
-    db.collection("projects").onSnapshot(function(snapshot){
-      var projects = [];
-      snapshot.forEach(function(doc){
-        var data = doc.data();
-        data._id = doc.id;
-        projects.push(data);
-      });
-      projects.sort(function(a, b){
-        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-        return ta - tb;
-      });
-      render(projects);
-    }, function(err){
-      showError("Could not load projects: " + err.message + " (check your Firestore security rules allow public reads on the 'projects' collection)");
-    });
-  } catch (e) {
-    showError("Firebase failed to initialize: " + e.message);
+  // Init Firebase
+  function initFirebase() {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      return true;
+    } catch(e) {
+      console.warn('Firebase init warning:', e.message);
+      return false;
+    }
   }
-}
 
-function escapeHtml(str){
-  return String(str || "").replace(/[&<>"']/g, function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  // Login
+  loginBtn.addEventListener('click', function() {
+    const pw = loginPw.value.trim();
+    if (pw === ADMIN_PASSWORD) {
+      loginBox.style.display = 'none';
+      adminPanel.classList.add('active');
+      initFirebase();
+      loadProjects();
+      loadAbout();
+    } else {
+      loginError.style.display = 'block';
+      loginPw.value = '';
+      loginPw.focus();
+    }
   });
-}
 
-function render(projects){
-  countEl.textContent = projects.length + (projects.length === 1 ? " entry" : " entries");
+  loginPw.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loginBtn.click();
+  });
 
-  if(!projects.length){
-    projectsEl.innerHTML = '<p class="empty">No projects yet — check back soon.</p>';
-    return;
+  // Logout
+  logoutBtn.addEventListener('click', function() {
+    adminPanel.classList.remove('active');
+    loginBox.style.display = 'block';
+    loginPw.value = '';
+    loginError.style.display = 'none';
+  });
+
+  // Load Projects
+  function loadProjects() {
+    if (!db) return;
+    db.collection('projects').onSnapshot((snapshot) => {
+      const list = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        data._id = doc.id;
+        list.push(data);
+      });
+      renderProjectList(list);
+    }, (err) => {
+      projectList.innerHTML = `<div style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+    });
   }
 
-  projectsEl.innerHTML = projects.slice().reverse().map(function(p){
-    var tagsHtml = (p.tags || []).map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join("");
-    var linkHtml = p.link ? '<a class="card-link" href="' + escapeHtml(p.link) + '" target="_blank" rel="noopener">View project →</a>' : '';
-    var imgHtml = p.image
-      ? '<img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
-      : '<div class="card-img-placeholder">No image yet</div>';
-    return '<div class="card">' +
-        imgHtml +
-        '<div class="card-body">' +
-          '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
-          '<div class="card-tags">' + tagsHtml + '</div>' +
-          '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
-          linkHtml +
-        '</div>' +
-      '</div>';
-  }).join("");
-
-  observeCards();
-}
-
-function observeCards(){
-  var cards = document.querySelectorAll(".card");
-  if(!("IntersectionObserver" in window)){
-    cards.forEach(function(c){ c.classList.add("visible"); });
-    return;
+  function renderProjectList(projects) {
+    if (!projects.length) {
+      projectList.innerHTML = '<div style="color:#71717A; font-style:italic;">No projects yet.</div>';
+      return;
+    }
+    let html = '';
+    projects.slice().reverse().forEach(p => {
+      html += `
+        <div style="background:#F4F4F5; padding:12px 16px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>${escapeHtml(p.title || 'Untitled')}</strong>
+            <div style="font-size:13px; color:#71717A;">${escapeHtml(p.desc || '')}</div>
+          </div>
+          <div>
+            <button class="btn btn-danger" style="padding:4px 12px; font-size:12px;" onclick="deleteProject('${p._id}')">Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    projectList.innerHTML = html;
   }
-  var observer = new IntersectionObserver(function(entries){
-    entries.forEach(function(entry, i){
-      if(entry.isIntersecting){
-        var el = entry.target;
-        setTimeout(function(){ el.classList.add("visible"); }, i * 60);
-        observer.unobserve(el);
+
+  window.deleteProject = function(id) {
+    if (!db) return;
+    if (!confirm('Delete this project?')) return;
+    db.collection('projects').doc(id).delete()
+      .then(() => { /* handled by real-time update */ })
+      .catch(err => alert('Error: ' + err.message));
+  };
+
+  // Save Project
+  function saveProject() {
+    if (!db) return;
+    const title = fTitle.value.trim();
+    if (!title) { alert('Title is required.'); return; }
+    const data = {
+      title,
+      desc: fDesc.value.trim(),
+      image: fImage.value.trim(),
+      link: fLink.value.trim(),
+      tags: fTags.value.split(',').map(s => s.trim()).filter(Boolean),
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('projects').add(data)
+      .then(() => {
+        formCard.style.display = 'none';
+        fTitle.value = ''; fDesc.value = ''; fImage.value = ''; fLink.value = ''; fTags.value = '';
+        projectSuccess.style.display = 'block';
+        setTimeout(() => projectSuccess.style.display = 'none', 3000);
+      })
+      .catch(err => alert('Error: ' + err.message));
+  }
+
+  // Save About
+  function saveAbout() {
+    if (!db) return;
+    const data = {
+      tagline: aboutTagline.value.trim(),
+      text: aboutText.value.trim(),
+      email: contactEmail.value.trim(),
+      linkedin: contactLinkedin.value.trim(),
+      phone: contactPhone.value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('settings').doc('about').set(data, { merge: true })
+      .then(() => {
+        aboutSuccess.style.display = 'block';
+        setTimeout(() => aboutSuccess.style.display = 'none', 3000);
+      })
+      .catch(err => alert('Error: ' + err.message));
+  }
+
+  // Load About
+  function loadAbout() {
+    if (!db) return;
+    db.collection('settings').doc('about').onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        aboutTagline.value = data.tagline || '';
+        aboutText.value = data.text || '';
+        contactEmail.value = data.email || '';
+        contactLinkedin.value = data.linkedin || '';
+        contactPhone.value = data.phone || '';
       }
     });
-  }, { threshold: 0.15 });
-  cards.forEach(function(c){ observer.observe(c); });
-}
+  }
 
-window.addEventListener("scroll", function(){
-  var header = document.querySelector("header");
-  if(window.scrollY > 40){ header.classList.add("scrolled"); }
-  else{ header.classList.remove("scrolled"); }
-});
+  // Event listeners
+  showAddBtn.addEventListener('click', () => {
+    formCard.style.display = 'block';
+    formCard.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    formCard.style.display = 'none';
+    fTitle.value = ''; fDesc.value = ''; fImage.value = ''; fLink.value = ''; fTags.value = '';
+  });
+
+  saveBtn.addEventListener('click', saveProject);
+  saveAboutBtn.addEventListener('click', saveAbout);
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+
+  console.log('✅ Admin panel ready. Password: anthony2026');
 </script>
 </body>
 </html>
