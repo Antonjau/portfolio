@@ -948,4 +948,190 @@
     
     div.querySelector('.move-down').addEventListener('click', () => {
       const next = div.nextElementSibling;
-      if (next) paragraphsContainer
+      if (next) paragraphsContainer.insertBefore(next, div);
+    });
+    
+    paragraphsContainer.appendChild(div);
+    return div;
+  }
+
+  addParagraphBtn.addEventListener('click', () => addParagraph());
+
+  function loadSettings() {
+    if (!db) return;
+    db.collection('settings').doc('site').get().then(doc => {
+      const data = doc.exists ? doc.data() : {};
+      sTagline.value = data.tagline || '';
+      sEmail.value = data.email || '';
+      sLinkedin.value = data.linkedin || '';
+      sPhone.value = data.phone || '';
+      
+      // Load paragraphs
+      const paragraphs = data.paragraphs || [];
+      paragraphsContainer.innerHTML = '';
+      paragraphCounter = 0;
+      if (paragraphs.length) {
+        paragraphs.forEach(p => addParagraph(p));
+      } else {
+        addParagraph(''); // Default empty paragraph
+      }
+    }).catch(err => {
+      console.error('Could not load settings:', err.message);
+    });
+  }
+
+  saveSettingsBtn.addEventListener('click', function() {
+    if (!db) return;
+    
+    // Collect paragraphs
+    const paragraphTexts = [];
+    paragraphsContainer.querySelectorAll('.paragraph-text').forEach(textarea => {
+      const val = textarea.value.trim();
+      if (val) paragraphTexts.push(val);
+    });
+    
+    const data = {
+      tagline: sTagline.value.trim(),
+      paragraphs: paragraphTexts,
+      email: sEmail.value.trim(),
+      linkedin: sLinkedin.value.trim(),
+      phone: sPhone.value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    
+    db.collection('settings').doc('site').set(data, { merge: true })
+      .then(() => {
+        settingsSaveMsg.style.display = 'block';
+        setTimeout(() => { settingsSaveMsg.style.display = 'none'; }, 2200);
+      })
+      .catch(err => alert('Save error: ' + err.message));
+  });
+
+  // ========================================================
+  // DOCUMENTS
+  // ========================================================
+  function loadDocuments() {
+    if (!db) return;
+    db.collection('documents').onSnapshot((snapshot) => {
+      const list = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        data._id = doc.id;
+        list.push(data);
+      });
+      list.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() || 0;
+        const tb = b.createdAt?.toMillis?.() || 0;
+        return tb - ta;
+      });
+      documents = list;
+      renderDocList();
+    }, (err) => {
+      docList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+    });
+  }
+
+  function renderDocList() {
+    if (!documents.length) {
+      docList.innerHTML = `<div class="empty-state">No documents uploaded yet.</div>`;
+      return;
+    }
+    let html = '';
+    documents.forEach(d => {
+      html += `
+        <div class="project-item">
+          <div class="project-info">
+            <strong>${escapeHtml(d.label || d.fileName || 'Untitled')} <span class="doc-cat-badge" style="margin-left:8px;">${escapeHtml(d.category || 'Document')}</span></strong>
+            <span class="meta">${escapeHtml(d.fileName || '')}</span>
+          </div>
+          <div class="project-actions">
+            <a class="btn btn-outline btn-sm" href="${escapeHtml(d.url)}" target="_blank" rel="noopener">↗ View</a>
+            <button class="btn btn-danger btn-sm" data-id="${d._id}" data-action="delete-doc">✕ Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    docList.innerHTML = html;
+
+    docList.querySelectorAll('[data-action="delete-doc"]').forEach(btn => {
+      btn.addEventListener('click', () => deleteDocument(btn.dataset.id));
+    });
+  }
+
+  function deleteDocument(id) {
+    const d = documents.find(doc => doc._id === id);
+    if (!d) return;
+    if (!confirm('Delete this document permanently?')) return;
+
+    const removeRecord = () => db.collection('documents').doc(id).delete();
+
+    if (d.storagePath && storage) {
+      storage.ref(d.storagePath).delete()
+        .then(removeRecord)
+        .catch(err => {
+          console.warn('Storage delete warning:', err.message);
+          removeRecord();
+        })
+        .catch(err => alert('Delete error: ' + err.message));
+    } else {
+      removeRecord().catch(err => alert('Delete error: ' + err.message));
+    }
+  }
+
+  docUploadBtn.addEventListener('click', function() {
+    if (!storage || !db) return;
+    const file = docFile.files[0];
+    if (!file) { alert('Choose a file first.'); return; }
+
+    const category = docCategory.value;
+    const label = docLabel.value.trim();
+    const path = 'documents/' + Date.now() + '_' + file.name;
+    const ref = storage.ref(path);
+    const task = ref.put(file);
+
+    docProgress.style.display = 'block';
+    docProgressBar.style.width = '0%';
+    docUploadBtn.disabled = true;
+
+    task.on('state_changed', (snap) => {
+      const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+      docProgressBar.style.width = pct + '%';
+    }, (err) => {
+      docProgress.style.display = 'none';
+      docUploadBtn.disabled = false;
+      alert('Upload error: ' + err.message);
+    }, () => {
+      task.snapshot.ref.getDownloadURL().then(url => {
+        return db.collection('documents').add({
+          category,
+          label: label || file.name,
+          fileName: file.name,
+          storagePath: path,
+          url,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(() => {
+        docProgress.style.display = 'none';
+        docUploadBtn.disabled = false;
+        docFile.value = '';
+        docLabel.value = '';
+      }).catch(err => {
+        docProgress.style.display = 'none';
+        docUploadBtn.disabled = false;
+        alert('Save error: ' + err.message);
+      });
+    });
+  });
+
+  // ----- helpers -----
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+
+  console.log('✅ Admin panel ready — default password: anthony2026');
+</script>
+</body>
+</html>
