@@ -1,879 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin · Anthony Njau Portfolio</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-  <style>
-    /* ----- reset & base ----- */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --ink: #18181B;
-      --paper: #FAFAFA;
-      --card: #F4F4F5;
-      --accent: #D97706;
-      --accent-deep: #92400E;
-      --line: #E4E4E7;
-      --muted: #71717A;
-      --radius: 16px;
-      --shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
-    }
-    body {
-      background: var(--paper);
-      color: var(--ink);
-      font-family: 'Inter', sans-serif;
-      line-height: 1.6;
-      padding: 0 0 2px;
-      -webkit-font-smoothing: antialiased;
-    }
-    .wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anthony Njau — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --ink:#18181B;
+    --paper:#FAFAFA;
+    --card:#F4F4F5;
+    --accent:#D97706;
+    --accent-deep:#92400E;
+    --line:#E4E4E7;
+    --muted:#71717A;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 28px;}
 
-    /* header */
-    header {
-      border-bottom: 1px solid var(--line);
-      padding: 32px 0 20px;
-      background: rgba(250,250,250,0.7);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    header h1 {
-      font-family: 'Source Serif 4', serif;
-      font-weight: 600;
-      font-size: 28px;
-      letter-spacing: -0.02em;
-    }
-    header .sub {
-      font-size: 14px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-    .admin-badge {
-      display: inline-block;
-      background: var(--accent);
-      color: white;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      padding: 2px 12px;
-      border-radius: 30px;
-      text-transform: uppercase;
-      margin-left: 12px;
-    }
+  header{border-bottom:1px solid var(--line);padding:52px 0 30px;position:sticky;top:0;background:var(--paper);z-index:10;transition:padding 0.25s ease, box-shadow 0.25s ease;}
+  header.scrolled{padding:18px 0;box-shadow:0 1px 0 var(--line);}
+  header.scrolled h1{font-size:22px;}
+  header.scrolled .role,header.scrolled .eyebrow{display:none;}
+  .eyebrow{font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin:0 0 10px;font-weight:600;}
+  h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:44px;margin:0 0 6px;letter-spacing:-0.01em;}
+  .role{font-size:16px;color:var(--muted);margin:0;}
+  nav{margin-top:24px;display:flex;gap:24px;flex-wrap:wrap;}
+  nav a{font-size:13px;letter-spacing:0.04em;color:var(--ink);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:3px;}
+  nav a:hover{border-bottom-color:var(--accent);color:var(--accent-deep);}
 
-    /* login overlay */
-    #login-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.3);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      transition: opacity 0.3s ease;
-    }
-    #login-overlay.hidden { opacity: 0; pointer-events: none; }
-    .login-box {
-      background: white;
-      padding: 40px 36px;
-      border-radius: var(--radius);
-      max-width: 380px;
-      width: 100%;
-      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.25);
-      border: 1px solid var(--line);
-    }
-    .login-box h2 {
-      font-family: 'Source Serif 4', serif;
-      font-weight: 600;
-      font-size: 22px;
-      margin-bottom: 6px;
-    }
-    .login-box p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
-    .login-box input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      font-size: 15px;
-      margin-bottom: 16px;
-      transition: border 0.2s;
-    }
-    .login-box input:focus { outline: none; border-color: var(--accent); }
-    .login-box button {
-      width: 100%;
-      padding: 12px;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .login-box button:hover { background: var(--accent-deep); }
-    .login-error {
-      color: #B91C1C;
-      font-size: 13px;
-      margin-top: 10px;
-      display: none;
-    }
+  .about{padding:44px 0 38px;border-bottom:1px solid var(--line);}
+  .about p{font-size:16px;max-width:640px;margin:0 0 14px;}
+  .about p:last-child{margin-bottom:0;}
+  .tagline{font-family:'Source Serif 4',serif;font-style:italic;color:var(--accent-deep);font-size:18px;}
 
-    /* admin panel */
-    #admin-panel { display: none; }
-    #admin-panel.active { display: block; }
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin:48px 0 22px;}
+  .section-head h2{font-family:'Source Serif 4',serif;font-weight:600;font-size:24px;margin:0;}
+  .count{font-size:12px;color:var(--muted);}
 
-    .admin-toolbar {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin: 24px 0 20px;
-    }
-    .btn {
-      padding: 10px 20px;
-      border-radius: 30px;
-      border: 1px solid var(--line);
-      background: white;
-      font-weight: 500;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .btn-primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-    .btn-primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
-    .btn-danger {
-      background: #DC2626;
-      border-color: #DC2626;
-      color: white;
-    }
-    .btn-danger:hover { background: #B91C1C; }
-    .btn-outline { background: transparent; }
-    .btn-outline:hover { background: var(--card); }
-    .btn-success {
-      background: #16A34A;
-      border-color: #16A34A;
-      color: white;
-    }
-    .btn-success:hover { background: #15803D; }
+  #projects{display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:20px;padding-bottom:30px;}
+  .card{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;
+    box-shadow:0 1px 3px rgba(0,0,0,0.04);
+    opacity:0;transform:translateY(28px) scale(0.96);
+    transition:opacity 0.6s cubic-bezier(.16,1,.3,1), transform 0.6s cubic-bezier(.16,1,.3,1), box-shadow 0.25s ease;
+    display:flex;flex-direction:column;
+  }
+  .card:hover{box-shadow:0 10px 24px rgba(0,0,0,0.10);transform:translateY(-3px) scale(1);}
+  .card.visible{opacity:1;transform:translateY(0) scale(1);}
+  .card-img-wrap{overflow:hidden;}
+  .card-img{width:100%;height:160px;background:var(--line);object-fit:cover;display:block;transition:transform 0.5s ease;}
+  .card:hover .card-img{transform:scale(1.08);}
+  .card-img-placeholder{
+    width:100%;height:160px;background:var(--line);display:flex;
+    align-items:center;justify-content:center;color:var(--muted);font-size:12px;
+  }
+  .card-body{padding:16px 18px 18px;border-top:3px solid var(--accent);flex:1;display:flex;flex-direction:column;}
+  .card-title{font-family:'Source Serif 4',serif;font-size:18px;font-weight:600;margin:0 0 8px;}
+  .card-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .tag{font-size:11px;color:var(--accent-deep);background:#FDF3E3;padding:3px 9px;border-radius:12px;font-weight:500;}
+  .card-desc{font-size:14px;color:#33363D;margin:0 0 12px;flex:1;}
+  .card-link{font-size:13px;color:var(--accent-deep);text-decoration:none;border-bottom:1px solid var(--accent);align-self:flex-start;}
+  .card-link:hover{color:var(--accent);}
+  .empty,.error{font-size:14px;color:var(--muted);font-style:italic;padding:18px 0;grid-column:1/-1;}
+  .error{color:#B91C1C;}
 
-    /* tabs */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      border-bottom: 1px solid var(--line);
-      margin-bottom: 28px;
-      flex-wrap: wrap;
-    }
-    .tab-btn {
-      padding: 10px 24px;
-      background: transparent;
-      border: none;
-      border-bottom: 3px solid transparent;
-      font-weight: 500;
-      font-size: 14px;
-      cursor: pointer;
-      color: var(--muted);
-      transition: all 0.2s;
-    }
-    .tab-btn:hover { color: var(--ink); }
-    .tab-btn.active {
-      color: var(--accent-deep);
-      border-bottom-color: var(--accent);
-    }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+  footer{margin-top:50px;padding:24px 0 50px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  footer a{color:var(--accent-deep);text-decoration:none;}
+  footer a:hover{color:var(--accent);}
 
-    /* form cards */
-    .form-card {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 28px 30px;
-      margin-bottom: 32px;
-      box-shadow: var(--shadow);
-    }
-    .form-card h3 {
-      font-family: 'Source Serif 4', serif;
-      font-weight: 600;
-      font-size: 20px;
-      margin-bottom: 18px;
-    }
-    .form-group { margin-bottom: 16px; }
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 4px;
-      color: #3F3F46;
-    }
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      font-size: 14px;
-      font-family: 'Inter', sans-serif;
-      transition: border 0.2s;
-    }
-    .form-group input:focus,
-    .form-group textarea:focus { outline: none; border-color: var(--accent); }
-    .form-group textarea { resize: vertical; min-height: 70px; }
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 8px;
-      flex-wrap: wrap;
-    }
-    .form-actions .btn { flex: 1; justify-content: center; }
-
-    /* file upload */
-    .file-upload-area {
-      border: 2px dashed var(--line);
-      border-radius: 10px;
-      padding: 30px;
-      text-align: center;
-      transition: border-color 0.3s;
-      cursor: pointer;
-    }
-    .file-upload-area:hover { border-color: var(--accent); }
-    .file-upload-area input[type="file"] { display: none; }
-    .file-list {
-      margin-top: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .file-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: var(--card);
-      border-radius: 8px;
-      border: 1px solid var(--line);
-    }
-    .file-item .file-name {
-      font-size: 13px;
-      font-weight: 500;
-    }
-    .file-item .file-size {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    /* project list */
-    .project-list { margin-top: 8px; }
-    .project-item {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px 22px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      transition: border-color 0.2s;
-    }
-    .project-item:hover { border-color: #D4D4D8; }
-    .project-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .project-info strong {
-      font-family: 'Source Serif 4', serif;
-      font-size: 17px;
-      font-weight: 600;
-    }
-    .project-info .meta {
-      font-size: 13px;
-      color: var(--muted);
-    }
-    .project-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .project-actions .btn {
-      padding: 6px 16px;
-      font-size: 12px;
-    }
-    .btn-sm { padding: 6px 14px; font-size: 12px; }
-
-    .empty-state {
-      text-align: center;
-      color: var(--muted);
-      padding: 40px 0;
-      font-style: italic;
-    }
-
-    .success-msg {
-      background: #DCFCE7;
-      color: #166534;
-      padding: 12px 16px;
-      border-radius: 10px;
-      margin-bottom: 16px;
-      display: none;
-    }
-    .success-msg.show { display: block; }
-
-    footer {
-      margin-top: 40px;
-      padding: 24px 0 40px;
-      border-top: 1px solid var(--line);
-      font-size: 13px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    footer a { color: var(--accent-deep); text-decoration: none; }
-    footer a:hover { color: var(--accent); }
-
-    @media (max-width: 600px) {
-      .form-row { grid-template-columns: 1fr; }
-      .login-box { padding: 28px 20px; }
-      .tabs { gap: 0; }
-      .tab-btn { padding: 8px 16px; font-size: 13px; }
-    }
-  </style>
+  @media (max-width:560px){ h1{font-size:32px;} }
+</style>
 </head>
 <body>
+<div class="wrap">
 
-<!-- ===== LOGIN OVERLAY ===== -->
-<div id="login-overlay">
-  <div class="login-box">
-    <h2>Admin access</h2>
-    <p>Enter your password to manage your portfolio</p>
-    <input type="password" id="admin-pw" placeholder="Password" />
-    <button id="login-btn">Unlock</button>
-    <div id="login-error" class="login-error">Incorrect password</div>
+  <header>
+    <p class="eyebrow">Portfolio · Information Science</p>
+    <h1>Anthony Njau</h1>
+    <p class="role">BSc Information Science</p>
+    <nav>
+      <a href="#about">About</a>
+      <a href="#projects">Projects</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <section class="about" id="about">
+    <p class="tagline" id="about-tagline">"Information is only valuable once it's organized, accessible, and trusted."</p>
+    <div id="about-content">
+      <p>Anthony Njau holds a BSc in Information Science and works at the intersection of data, systems, and structure — turning scattered information into something people can actually find, understand, and use.</p>
+      <p>His background combines a grounding in information organization and retrieval with a practical, hands-on approach to building and managing systems that hold up under real-world use. He's drawn to problems where clarity is the missing piece: messy data, disconnected processes, or tools that don't quite fit how people actually work.</p>
+      <p>This page is a living record of that work — updated as new projects come together.</p>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <h2>Projects</h2>
+    <span class="count" id="proj-count"></span>
   </div>
-</div>
 
-<!-- ===== MAIN ADMIN PANEL ===== -->
-<div id="admin-panel">
-  <div class="wrap">
+  <div id="projects"></div>
 
-    <header>
-      <h1>⚙️ Portfolio Admin <span class="admin-badge">protected</span></h1>
-      <div class="sub">Manage projects, about section, contact info &amp; documents</div>
-    </header>
+  <footer id="contact">
+    <span>Anthony Njau — Information Science</span>
+    <span id="contact-info">
+      <a href="mailto:njaunanthony9@gmail.com">njaunanthony9@gmail.com</a> · 
+      <a href="https://www.linkedin.com/in/anthony-njau-9456262" target="_blank">LinkedIn</a>
+    </span>
+  </footer>
 
-    <div class="admin-toolbar">
-      <button class="btn btn-outline" id="logout-btn" style="margin-left:auto;">🚪 Logout</button>
-    </div>
-
-    <!-- tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="projects">📁 Projects</button>
-      <button class="tab-btn" data-tab="about">✏️ About &amp; Contact</button>
-      <button class="tab-btn" data-tab="resume">📄 Resume &amp; Certificates</button>
-    </div>
-
-    <!-- ===== TAB 1: PROJECTS ===== -->
-    <div class="tab-content active" id="tab-projects">
-      <div style="margin-bottom:20px;">
-        <button class="btn btn-primary" id="show-add-form">＋ Add new project</button>
-        <button class="btn btn-outline" id="refresh-list">⟳ Refresh</button>
-      </div>
-
-      <div class="form-card" id="project-form" style="display:none;">
-        <h3 id="form-title">Add project</h3>
-        <input type="hidden" id="edit-id" />
-        <div class="form-group">
-          <label>Project title</label>
-          <input type="text" id="f-title" placeholder="e.g. Library Catalog System" />
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="f-desc" placeholder="Brief description of the project…"></textarea>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Image URL</label>
-            <input type="text" id="f-image" placeholder="https://example.com/image.jpg" />
-          </div>
-          <div class="form-group">
-            <label>Project link (optional)</label>
-            <input type="text" id="f-link" placeholder="https://example.com/project" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Tags (comma separated)</label>
-          <input type="text" id="f-tags" placeholder="e.g. Python, UI, Data" />
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" id="save-project">💾 Save project</button>
-          <button class="btn btn-outline" id="cancel-edit">Cancel</button>
-        </div>
-      </div>
-
-      <div class="project-list" id="project-list">
-        <div class="empty-state">Loading projects…</div>
-      </div>
-    </div>
-
-    <!-- ===== TAB 2: ABOUT & CONTACT ===== -->
-    <div class="tab-content" id="tab-about">
-      <div id="about-success" class="success-msg">✅ About &amp; contact info updated successfully!</div>
-      
-      <div class="form-card">
-        <h3>About Section</h3>
-        <div class="form-group">
-          <label>Tagline (quoted text)</label>
-          <input type="text" id="about-tagline" placeholder="e.g. Information is only valuable once it's organized..." />
-        </div>
-        <div class="form-group">
-          <label>About text (paragraphs, use &lt;br&gt; for line breaks)</label>
-          <textarea id="about-text" rows="6" placeholder="Write your about content here..."></textarea>
-        </div>
-      </div>
-
-      <div class="form-card">
-        <h3>Contact Information</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="contact-email" placeholder="your@email.com" />
-          </div>
-          <div class="form-group">
-            <label>LinkedIn URL</label>
-            <input type="text" id="contact-linkedin" placeholder="https://linkedin.com/in/yourprofile" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Phone (optional)</label>
-          <input type="text" id="contact-phone" placeholder="+1234567890" />
-        </div>
-        <div class="form-actions">
-          <button class="btn btn-primary" id="save-about">💾 Save About &amp; Contact</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ===== TAB 3: RESUME & CERTIFICATES ===== -->
-    <div class="tab-content" id="tab-resume">
-      <div id="resume-success" class="success-msg">✅ File uploaded successfully!</div>
-
-      <div class="form-card">
-        <h3>📄 Resume / CV</h3>
-        <div class="file-upload-area" id="resume-upload-area">
-          <p style="font-size:14px; color:var(--muted);">📤 Click or drag to upload your resume (PDF)</p>
-          <input type="file" id="resume-file" accept=".pdf,.doc,.docx" />
-        </div>
-        <div class="file-list" id="resume-list"></div>
-      </div>
-
-      <div class="form-card">
-        <h3>📜 Certificates</h3>
-        <div class="file-upload-area" id="cert-upload-area">
-          <p style="font-size:14px; color:var(--muted);">📤 Click or drag to upload certificates (PDF, images)</p>
-          <input type="file" id="cert-file" accept=".pdf,.jpg,.jpeg,.png" multiple />
-        </div>
-        <div class="file-list" id="cert-list"></div>
-      </div>
-    </div>
-
-    <footer>
-      <span>Anthony Njau — Admin</span>
-      <span><a href="#" onclick="window.location.reload();">← back to portfolio</a></span>
-    </footer>
-
-  </div>
 </div>
 
 <script>
-  /* =========================================================
-     FIREBASE CONFIG – same as your portfolio
-     ========================================================= */
-  const firebaseConfig = {
-    apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
-    authDomain: "portfolio-management-ed2d5.firebaseapp.com",
-    databaseURL: "https://portfolio-management-ed2d5-default-rtdb.firebaseio.com",
-    projectId: "portfolio-management-ed2d5",
-    storageBucket: "portfolio-management-ed2d5.firebasestorage.app",
-    messagingSenderId: "307935862567",
-    appId: "1:307935862567:web:9a3dce523d134c96bbd302",
-    measurementId: "G-X797LW4YQB"
-  };
+/* =========================================================
+   FIREBASE CONFIG — REPLACE THESE VALUES WITH YOUR OWN
+   ========================================================= */
+var firebaseConfig = {
+  apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
+  authDomain: "portfolio-management-ed2d5.firebaseapp.com",
+  databaseURL: "https://portfolio-management-ed2d5-default-rtdb.firebaseio.com",
+  projectId: "portfolio-management-ed2d5",
+  storageBucket: "portfolio-management-ed2d5.firebasestorage.app",
+  messagingSenderId: "307935862567",
+  appId: "1:307935862567:web:9a3dce523d134c96bbd302",
+  measurementId: "G-X797LW4YQB"
+};
 
-  // ----- DOM refs -----
-  const loginOverlay = document.getElementById('login-overlay');
-  const adminPanel = document.getElementById('admin-panel');
-  const loginBtn = document.getElementById('login-btn');
-  const loginPw = document.getElementById('admin-pw');
-  const loginError = document.getElementById('login-error');
-  const logoutBtn = document.getElementById('logout-btn');
+var projectsEl = document.getElementById("projects");
+var countEl = document.getElementById("proj-count");
 
-  // Projects
-  const projectList = document.getElementById('project-list');
-  const formCard = document.getElementById('project-form');
-  const formTitle = document.getElementById('form-title');
-  const editId = document.getElementById('edit-id');
-  const fTitle = document.getElementById('f-title');
-  const fDesc = document.getElementById('f-desc');
-  const fImage = document.getElementById('f-image');
-  const fLink = document.getElementById('f-link');
-  const fTags = document.getElementById('f-tags');
-  const saveBtn = document.getElementById('save-project');
-  const cancelBtn = document.getElementById('cancel-edit');
-  const showAddBtn = document.getElementById('show-add-form');
-  const refreshBtn = document.getElementById('refresh-list');
+function showError(msg){
+  projectsEl.innerHTML = '<p class="error">' + msg + '</p>';
+  countEl.textContent = "";
+}
 
-  // About & Contact
-  const aboutTagline = document.getElementById('about-tagline');
-  const aboutText = document.getElementById('about-text');
-  const contactEmail = document.getElementById('contact-email');
-  const contactLinkedin = document.getElementById('contact-linkedin');
-  const contactPhone = document.getElementById('contact-phone');
-  const saveAboutBtn = document.getElementById('save-about');
-  const aboutSuccess = document.getElementById('about-success');
+// Guard: SDK scripts failed to load
+if (typeof firebase === "undefined") {
+  showError("Firebase SDK failed to load. Check your internet connection or ad blocker.");
+} else if (firebaseConfig.apiKey === "YOUR_API_KEY") {
+  showError("Firebase isn't configured yet — replace the placeholder values in firebaseConfig with your real project credentials from the Firebase Console.");
+} else {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
 
-  // Resume & Certificates
-  const resumeFileInput = document.getElementById('resume-file');
-  const certFileInput = document.getElementById('cert-file');
-  const resumeList = document.getElementById('resume-list');
-  const certList = document.getElementById('cert-list');
-  const resumeSuccess = document.getElementById('resume-success');
-
-  // ----- state -----
-  const ADMIN_PASSWORD = 'anthony2026'; // change this!
-  let db = null;
-  let storage = null;
-  let projects = [];
-  let editingId = null;
-
-  // ----- init firebase -----
-  function initFirebase() {
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.firestore();
-      storage = firebase.storage();
-      return true;
-    } catch (e) {
-      alert('Firebase init error: ' + e.message);
-      return false;
-    }
-  }
-
-  // ----- login -----
-  loginBtn.addEventListener('click', function() {
-    const pw = loginPw.value.trim();
-    if (pw === ADMIN_PASSWORD) {
-      loginOverlay.classList.add('hidden');
-      adminPanel.classList.add('active');
-      if (initFirebase()) {
-        loadProjects();
-        loadAboutAndContact();
-        loadFiles();
+    // Load About & Contact info from Firestore
+    db.collection("settings").doc("about").onSnapshot(function(doc) {
+      if (doc.exists) {
+        var data = doc.data();
+        // Update tagline
+        var taglineEl = document.getElementById("about-tagline");
+        if (data.tagline) {
+          taglineEl.textContent = '"' + data.tagline + '"';
+        }
+        
+        // Update about content
+        var aboutContent = document.getElementById("about-content");
+        if (data.text) {
+          // Split by <br> tags or newlines
+          var paragraphs = data.text.split(/\n|<br\s*\/?>/).filter(p => p.trim() !== '');
+          aboutContent.innerHTML = paragraphs.map(p => '<p>' + p.trim() + '</p>').join('');
+        }
+        
+        // Update contact info
+        var contactInfo = document.getElementById("contact-info");
+        var contactParts = [];
+        if (data.email) {
+          contactParts.push('<a href="mailto:' + data.email + '">' + data.email + '</a>');
+        }
+        if (data.linkedin) {
+          contactParts.push('<a href="' + data.linkedin + '" target="_blank">LinkedIn</a>');
+        }
+        if (data.phone) {
+          contactParts.push('<span>' + data.phone + '</span>');
+        }
+        if (contactParts.length > 0) {
+          contactInfo.innerHTML = contactParts.join(' · ');
+        }
       }
-    } else {
-      loginError.style.display = 'block';
-      loginPw.value = '';
-      loginPw.focus();
-    }
-  });
+    }, function(err) {
+      console.warn("Could not load about info:", err.message);
+    });
 
-  loginPw.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') loginBtn.click();
-  });
-
-  // ----- logout -----
-  logoutBtn.addEventListener('click', function() {
-    adminPanel.classList.remove('active');
-    loginOverlay.classList.remove('hidden');
-    loginPw.value = '';
-    loginError.style.display = 'none';
-    projects = [];
-    projectList.innerHTML = '<div class="empty-state">Loading projects…</div>';
-  });
-
-  // ============================================
-  // 1. PROJECTS CRUD
-  // ============================================
-  function loadProjects() {
-    if (!db) return;
-    db.collection('projects').onSnapshot((snapshot) => {
-      const list = [];
-      snapshot.forEach(doc => {
-        const data = doc.data();
+    // Load Projects
+    db.collection("projects").onSnapshot(function(snapshot){
+      var projects = [];
+      snapshot.forEach(function(doc){
+        var data = doc.data();
         data._id = doc.id;
-        list.push(data);
+        projects.push(data);
       });
-      list.sort((a, b) => {
-        const ta = a.createdAt?.toMillis?.() || 0;
-        const tb = b.createdAt?.toMillis?.() || 0;
+      projects.sort(function(a, b){
+        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
         return ta - tb;
       });
-      projects = list;
-      renderList();
-    }, (err) => {
-      projectList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+      render(projects);
+    }, function(err){
+      showError("Could not load projects: " + err.message + " (check your Firestore security rules allow public reads on the 'projects' collection)");
     });
+  } catch (e) {
+    showError("Firebase failed to initialize: " + e.message);
   }
+}
 
-  function renderList() {
-    if (!projects.length) {
-      projectList.innerHTML = `<div class="empty-state">No projects yet. Add your first one!</div>`;
-      return;
-    }
-    let html = '';
-    projects.slice().reverse().forEach(p => {
-      const tags = (p.tags || []).join(', ');
-      html += `
-        <div class="project-item">
-          <div class="project-info">
-            <strong>${escapeHtml(p.title || 'Untitled')}</strong>
-            <span class="meta">${escapeHtml(p.desc || '')} ${tags ? '· ' + escapeHtml(tags) : ''}</span>
-          </div>
-          <div class="project-actions">
-            <button class="btn btn-outline btn-sm" data-id="${p._id}" data-action="edit">✎ Edit</button>
-            <button class="btn btn-danger btn-sm" data-id="${p._id}" data-action="delete">✕ Delete</button>
-          </div>
-        </div>
-      `;
-    });
-    projectList.innerHTML = html;
-
-    projectList.querySelectorAll('[data-action="edit"]').forEach(btn => {
-      btn.addEventListener('click', () => editProject(btn.dataset.id));
-    });
-    projectList.querySelectorAll('[data-action="delete"]').forEach(btn => {
-      btn.addEventListener('click', () => deleteProject(btn.dataset.id));
-    });
-  }
-
-  function editProject(id) {
-    const p = projects.find(proj => proj._id === id);
-    if (!p) return;
-    editingId = id;
-    formTitle.textContent = '✎ Edit project';
-    editId.value = id;
-    fTitle.value = p.title || '';
-    fDesc.value = p.desc || '';
-    fImage.value = p.image || '';
-    fLink.value = p.link || '';
-    fTags.value = (p.tags || []).join(', ');
-    formCard.style.display = 'block';
-    formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
-
-  function deleteProject(id) {
-    if (!db) return;
-    if (!confirm('Delete this project permanently?')) return;
-    db.collection('projects').doc(id).delete()
-      .catch(err => alert('Delete error: ' + err.message));
-  }
-
-  function saveProject() {
-    if (!db) return;
-    const title = fTitle.value.trim();
-    if (!title) { alert('Title is required.'); return; }
-
-    const data = {
-      title,
-      desc: fDesc.value.trim(),
-      image: fImage.value.trim(),
-      link: fLink.value.trim(),
-      tags: fTags.value.split(',').map(s => s.trim()).filter(Boolean),
-    };
-
-    const id = editId.value;
-    const promise = id
-      ? db.collection('projects').doc(id).update(data)
-      : db.collection('projects').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-
-    promise.then(() => {
-      resetForm();
-    }).catch(err => alert('Save error: ' + err.message));
-  }
-
-  function resetForm() {
-    formCard.style.display = 'none';
-    editId.value = '';
-    fTitle.value = '';
-    fDesc.value = '';
-    fImage.value = '';
-    fLink.value = '';
-    fTags.value = '';
-    editingId = null;
-    formTitle.textContent = 'Add project';
-  }
-
-  showAddBtn.addEventListener('click', () => {
-    resetForm();
-    formCard.style.display = 'block';
-    formTitle.textContent = '＋ Add project';
-    fTitle.focus();
+function escapeHtml(str){
+  return String(str || "").replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
   });
+}
 
-  cancelBtn.addEventListener('click', resetForm);
-  saveBtn.addEventListener('click', saveProject);
-  refreshBtn.addEventListener('click', () => { if (db) loadProjects(); });
+function render(projects){
+  countEl.textContent = projects.length + (projects.length === 1 ? " entry" : " entries");
 
-  // ============================================
-  // 2. ABOUT & CONTACT
-  // ============================================
-  function loadAboutAndContact() {
-    if (!db) return;
-    db.collection('settings').doc('about').onSnapshot((doc) => {
-      if (doc.exists) {
-        const data = doc.data();
-        aboutTagline.value = data.tagline || '';
-        aboutText.value = data.text || '';
-        contactEmail.value = data.email || '';
-        contactLinkedin.value = data.linkedin || '';
-        contactPhone.value = data.phone || '';
+  if(!projects.length){
+    projectsEl.innerHTML = '<p class="empty">No projects yet — check back soon.</p>';
+    return;
+  }
+
+  projectsEl.innerHTML = projects.slice().reverse().map(function(p){
+    var tagsHtml = (p.tags || []).map(function(t){ return '<span class="tag">' + escapeHtml(t) + '</span>'; }).join("");
+    var linkHtml = p.link ? '<a class="card-link" href="' + escapeHtml(p.link) + '" target="_blank" rel="noopener">View project →</a>' : '';
+    var imgHtml = p.image
+      ? '<img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
+      : '<div class="card-img-placeholder">No image yet</div>';
+    return '<div class="card">' +
+        imgHtml +
+        '<div class="card-body">' +
+          '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
+          '<div class="card-tags">' + tagsHtml + '</div>' +
+          '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
+          linkHtml +
+        '</div>' +
+      '</div>';
+  }).join("");
+
+  observeCards();
+}
+
+function observeCards(){
+  var cards = document.querySelectorAll(".card");
+  if(!("IntersectionObserver" in window)){
+    cards.forEach(function(c){ c.classList.add("visible"); });
+    return;
+  }
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry, i){
+      if(entry.isIntersecting){
+        var el = entry.target;
+        setTimeout(function(){ el.classList.add("visible"); }, i * 60);
+        observer.unobserve(el);
       }
     });
-  }
+  }, { threshold: 0.15 });
+  cards.forEach(function(c){ observer.observe(c); });
+}
 
-  function saveAboutAndContact() {
-    if (!db) return;
-    const data = {
-      tagline: aboutTagline.value.trim(),
-      text: aboutText.value.trim(),
-      email: contactEmail.value.trim(),
-      linkedin: contactLinkedin.value.trim(),
-      phone: contactPhone.value.trim(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    db.collection('settings').doc('about').set(data, { merge: true })
-      .then(() => {
-        aboutSuccess.classList.add('show');
-        setTimeout(() => aboutSuccess.classList.remove('show'), 3000);
-      })
-      .catch(err => alert('Error saving: ' + err.message));
-  }
-
-  saveAboutBtn.addEventListener('click', saveAboutAndContact);
-
-  // ============================================
-  // 3. RESUME & CERTIFICATES (Storage)
-  // ============================================
-  function loadFiles() {
-    if (!storage) return;
-    // Load resume
-    const resumeRef = storage.ref('resume/');
-    resumeRef.listAll().then(result => {
-      renderFileList(result.items, resumeList, 'resume');
-    }).catch(() => {});
-
-    // Load certificates
-    const certRef = storage.ref('certificates/');
-    certRef.listAll().then(result => {
-      renderFileList(result.items, certList, 'cert');
-    }).catch(() => {});
-  }
-
-  function renderFileList(items, container, type) {
-    if (!items.length) {
-      container.innerHTML = '<div class="empty-state" style="padding:10px 0;">No files uploaded yet.</div>';
-      return;
-    }
-    let html = '';
-    items.forEach(item => {
-      item.getMetadata().then(meta => {
-        const size = (meta.size / 1024).toFixed(1) + ' KB';
-        html += `
-          <div class="file-item">
-            <span class="file-name">📄 ${escapeHtml(item.name)}</span>
-            <span class="file-size">${size}</span>
-            <button class="btn btn-danger btn-sm" onclick="deleteFile('${item.fullPath}')">✕</button>
-          </div>
-        `;
-        container.innerHTML = html;
-      }).catch(() => {});
-    });
-  }
-
-  // File upload handlers
-  document.getElementById('resume-upload-area').addEventListener('click', () => resumeFileInput.click());
-  document.getElementById('cert-upload-area').addEventListener('click', () => certFileInput.click());
-
-  resumeFileInput.addEventListener('change', function(e) {
-    if (this.files.length) {
-      uploadFile(this.files[0], 'resume/');
-    }
-  });
-
-  certFileInput.addEventListener('change', function(e) {
-    if (this.files.length) {
-      Array.from(this.files).forEach(file => {
-        uploadFile(file, 'certificates/');
-      });
-    }
-  });
-
-  function uploadFile(file, path) {
-    if (!storage) return;
-    const fileRef = storage.ref(path + file.name);
-    fileRef.put(file).then(() => {
-      resumeSuccess.classList.add('show');
-      setTimeout(() => resumeSuccess.classList.remove('show'), 3000);
-      loadFiles(); // refresh
-    }).catch(err => alert('Upload error: ' + err.message));
-  }
-
-  // Global delete function
-  window.deleteFile = function(fullPath) {
-    if (!storage) return;
-    if (!confirm('Delete this file?')) return;
-    storage.ref(fullPath).delete().then(() => {
-      loadFiles();
-    }).catch(err => alert('Delete error: ' + err.message));
-  };
-
-  // ============================================
-  // 4. TABS
-  // ============================================
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      this.classList.add('active');
-      document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-    });
-  });
-
-  // ============================================
-  // HELPERS
-  // ============================================
-  function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>"']/g, c => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-    })[c]);
-  }
-
-  console.log('✅ Admin panel ready — default password: anthony2026');
+window.addEventListener("scroll", function(){
+  var header = document.querySelector("header");
+  if(window.scrollY > 40){ header.classList.add("scrolled"); }
+  else{ header.classList.remove("scrolled"); }
+});
 </script>
 </body>
 </html>
