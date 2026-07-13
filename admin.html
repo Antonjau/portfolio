@@ -1,158 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin · Anthony Njau Portfolio</title>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', sans-serif; background: #FAFAFA; padding: 40px 20px; }
-  .wrap { max-width: 500px; margin: 0 auto; }
-  .login-box {
-    background: white;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-    border: 1px solid #E4E4E7;
-  }
-  .login-box h2 { margin-bottom: 8px; }
-  .login-box p { color: #71717A; margin-bottom: 20px; }
-  .login-box input {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid #E4E4E7;
-    border-radius: 10px;
-    font-size: 15px;
-    margin-bottom: 12px;
-  }
-  .login-box button {
-    width: 100%;
-    padding: 12px;
-    background: #D97706;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-  }
-  .login-box button:hover { background: #92400E; }
-  .error { color: #B91C1C; font-size: 13px; margin-top: 10px; display: none; }
-  .success { color: #16A34A; font-size: 13px; margin-top: 10px; display: none; }
-  .admin-panel { display: none; margin-top: 20px; }
-  .admin-panel.active { display: block; }
-  .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-weight: 500; font-size: 13px; margin-bottom: 4px; }
-  .form-group input, .form-group textarea {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid #E4E4E7;
-    border-radius: 10px;
-    font-size: 14px;
-  }
-  .btn {
-    padding: 10px 20px;
-    border-radius: 30px;
-    border: 1px solid #E4E4E7;
-    background: white;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .btn-primary { background: #D97706; color: white; border-color: #D97706; }
-  .btn-primary:hover { background: #92400E; }
-  .btn-danger { background: #DC2626; color: white; border-color: #DC2626; }
-  .btn-danger:hover { background: #B91C1C; }
-  .logout-btn { float: right; }
-  .tab { margin-top: 20px; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin · Anthony Njau Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <style>
+    /* ----- reset & base (same style as portfolio) ----- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --ink: #18181B;
+      --paper: #FAFAFA;
+      --card: #F4F4F5;
+      --accent: #D97706;
+      --accent-deep: #92400E;
+      --line: #E4E4E7;
+      --muted: #71717A;
+      --radius: 16px;
+      --shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
+    }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      padding: 0 0 2px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
+
+    /* header */
+    header {
+      border-bottom: 1px solid var(--line);
+      padding: 32px 0 20px;
+      background: rgba(250,250,250,0.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      font-family: 'Source Serif 4', serif;
+      font-weight: 600;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+    header .sub {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .admin-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 2px 12px;
+      border-radius: 30px;
+      text-transform: uppercase;
+      margin-left: 12px;
+    }
+
+    /* login overlay */
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      transition: opacity 0.3s ease;
+    }
+    #login-overlay.hidden { opacity: 0; pointer-events: none; }
+    .login-box {
+      background: white;
+      padding: 40px 36px;
+      border-radius: var(--radius);
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 30px 60px -20px rgba(0,0,0,0.25);
+      border: 1px solid var(--line);
+    }
+    .login-box h2 {
+      font-family: 'Source Serif 4', serif;
+      font-weight: 600;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+    .login-box p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+    .login-box input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 16px;
+      transition: border 0.2s;
+    }
+    .login-box input:focus { outline: none; border-color: var(--accent); }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-box button:hover { background: var(--accent-deep); }
+    .login-error {
+      color: #B91C1C;
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* admin panel */
+    #admin-panel { display: none; }
+    #admin-panel.active { display: block; }
+
+    .admin-toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 24px 0 20px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      background: white;
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+    .btn-danger {
+      background: #DC2626;
+      border-color: #DC2626;
+      color: white;
+    }
+    .btn-danger:hover { background: #B91C1C; }
+    .btn-outline { background: transparent; }
+    .btn-outline:hover { background: var(--card); }
+
+    /* tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--line);
+      margin-top: 28px;
+    }
+    .tab-btn {
+      padding: 10px 18px;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transform: translateY(1px);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.active {
+      color: var(--accent-deep);
+      border-bottom-color: var(--accent);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* form */
+    .form-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px 30px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+      display: none;
+    }
+    .form-card.open { display: block; }
+    .form-card.static { display: block; }
+    .form-card h3 {
+      font-family: 'Source Serif 4', serif;
+      font-weight: 600;
+      font-size: 20px;
+      margin-bottom: 18px;
+    }
+    .form-card .hint {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin: -12px 0 18px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #3F3F46;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: border 0.2s;
+      background: white;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { outline: none; border-color: var(--accent); }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .form-actions .btn { flex: 1; justify-content: center; }
+    .save-msg {
+      font-size: 13px;
+      margin-top: 10px;
+      display: none;
+      color: #15803D;
+    }
+
+    /* project list */
+    .project-list { margin-top: 8px; }
+    .project-item {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .project-item:hover { border-color: #D4D4D8; }
+    .project-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .project-info strong {
+      font-family: 'Source Serif 4', serif;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .project-info .meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .project-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .project-actions .btn {
+      padding: 6px 16px;
+      font-size: 12px;
+    }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 0;
+      font-style: italic;
+    }
+
+    /* documents tab */
+    .doc-upload-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    .doc-progress {
+      height: 6px;
+      border-radius: 6px;
+      background: var(--card);
+      overflow: hidden;
+      margin-top: 10px;
+      display: none;
+    }
+    .doc-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.2s ease;
+    }
+    .doc-cat-badge {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent-deep);
+      background: #FEF3E8;
+      padding: 2px 12px;
+      border-radius: 30px;
+      border: 1px solid #FADDC6;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 24px 0 40px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    footer a { color: var(--accent-deep); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .doc-upload-row { grid-template-columns: 1fr; }
+      .login-box { padding: 28px 20px; }
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="login-box" id="login-box">
-    <h2>🔐 Admin Access</h2>
-    <p>Enter your password to manage your portfolio</p>
+
+<!-- ===== LOGIN OVERLAY ===== -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h2>Admin access</h2>
+    <p>Enter your password to manage projects</p>
     <input type="password" id="admin-pw" placeholder="Password" />
     <button id="login-btn">Unlock</button>
-    <div id="login-error" class="error">Incorrect password</div>
+    <div id="login-error" class="login-error">Incorrect password</div>
   </div>
+</div>
 
-  <div class="admin-panel" id="admin-panel">
-    <div style="background:white; padding:20px; border-radius:16px; border:1px solid #E4E4E7; margin-bottom:20px;">
-      <h3>⚙️ Admin Panel <span style="font-size:12px; color:#71717A; font-weight:normal;">(protected)</span></h3>
-      <button class="btn btn-danger logout-btn" id="logout-btn" style="font-size:12px;">Logout</button>
-      <div style="clear:both;"></div>
+<!-- ===== MAIN ADMIN PANEL ===== -->
+<div id="admin-panel">
+  <div class="wrap">
+
+    <header>
+      <h1>⚙️ Admin <span class="admin-badge">protected</span></h1>
+      <div class="sub">Manage your portfolio — changes appear instantly on the live site.</div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="projects">Projects</button>
+      <button class="tab-btn" data-tab="siteinfo">Site Info</button>
+      <button class="tab-btn" data-tab="documents">Documents</button>
     </div>
 
-    <!-- Projects Section -->
-    <div style="background:white; padding:24px; border-radius:16px; border:1px solid #E4E4E7; margin-bottom:20px;">
-      <h4>📁 Projects</h4>
-      <div style="margin:16px 0;">
-        <button class="btn btn-primary" id="show-add-form">+ Add Project</button>
+    <!-- ===================== PROJECTS TAB ===================== -->
+    <div class="tab-panel active" id="tab-projects">
+
+      <div class="admin-toolbar">
+        <button class="btn btn-primary" id="show-add-form">＋ Add new project</button>
+        <button class="btn btn-outline" id="refresh-list">⟳ Refresh</button>
       </div>
-      <div id="project-form" style="display:none; border-top:1px solid #E4E4E7; padding-top:16px; margin-top:16px;">
+
+      <!-- add / edit form -->
+      <div class="form-card" id="project-form">
+        <h3 id="form-title">Add project</h3>
+        <input type="hidden" id="edit-id" />
         <div class="form-group">
-          <label>Title</label>
-          <input type="text" id="f-title" />
+          <label>Project title</label>
+          <input type="text" id="f-title" placeholder="e.g. Library Catalog System" />
         </div>
         <div class="form-group">
           <label>Description</label>
-          <textarea id="f-desc" rows="3"></textarea>
+          <textarea id="f-desc" placeholder="Brief description of the project…"></textarea>
         </div>
-        <div class="form-group">
-          <label>Image URL</label>
-          <input type="text" id="f-image" />
-        </div>
-        <div class="form-group">
-          <label>Project Link</label>
-          <input type="text" id="f-link" />
+        <div class="form-row">
+          <div class="form-group">
+            <label>Image URL</label>
+            <input type="text" id="f-image" placeholder="https://example.com/image.jpg" />
+          </div>
+          <div class="form-group">
+            <label>Project link (optional)</label>
+            <input type="text" id="f-link" placeholder="https://example.com/project" />
+          </div>
         </div>
         <div class="form-group">
           <label>Tags (comma separated)</label>
-          <input type="text" id="f-tags" />
+          <input type="text" id="f-tags" placeholder="e.g. Python, UI, Data" />
         </div>
-        <button class="btn btn-primary" id="save-project">Save Project</button>
-        <button class="btn" id="cancel-edit" style="margin-left:10px;">Cancel</button>
-        <div id="project-success" class="success" style="margin-top:10px;">✅ Project saved!</div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="save-project">💾 Save project</button>
+          <button class="btn btn-outline" id="cancel-edit">Cancel</button>
+        </div>
       </div>
-      <div id="project-list" style="margin-top:12px;">
-        <div style="color:#71717A; font-style:italic;">Loading projects...</div>
+
+      <!-- project list -->
+      <div class="project-list" id="project-list">
+        <div class="empty-state">Loading projects…</div>
       </div>
     </div>
 
-    <!-- About & Contact Section -->
-    <div style="background:white; padding:24px; border-radius:16px; border:1px solid #E4E4E7; margin-bottom:20px;">
-      <h4>✏️ About & Contact</h4>
-      <div class="form-group">
-        <label>Tagline</label>
-        <input type="text" id="about-tagline" placeholder="Your tagline here" />
+    <!-- ===================== SITE INFO TAB ===================== -->
+    <div class="tab-panel" id="tab-siteinfo">
+      <div class="form-card static">
+        <h3>About section</h3>
+        <div class="hint">This text is shown in the "About" section of your portfolio.</div>
+
+        <div class="form-group">
+          <label>Tagline (shown in italics at the top)</label>
+          <input type="text" id="s-tagline" placeholder="A short quote or tagline" />
+        </div>
+
+        <div class="form-group">
+          <label>About paragraphs (separate paragraphs with a blank line)</label>
+          <textarea id="s-about" style="min-height:160px;" placeholder="Write your about text here. Leave a blank line between paragraphs."></textarea>
+        </div>
+
+        <h3 style="margin-top:24px;">Contact</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="text" id="s-email" placeholder="you@example.com" />
+          </div>
+          <div class="form-group">
+            <label>LinkedIn URL</label>
+            <input type="text" id="s-linkedin" placeholder="https://linkedin.com/in/username" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Name / role shown under header (optional overrides)</label>
+          <div class="form-row">
+            <input type="text" id="s-name" placeholder="Anthony Njau" />
+            <input type="text" id="s-role" placeholder="BSc Information Science" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="save-settings">💾 Save site info</button>
+        </div>
+        <div class="save-msg" id="settings-save-msg">Saved ✓</div>
       </div>
-      <div class="form-group">
-        <label>About Text</label>
-        <textarea id="about-text" rows="4" placeholder="Write your about content..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="contact-email" placeholder="your@email.com" />
-      </div>
-      <div class="form-group">
-        <label>LinkedIn URL</label>
-        <input type="text" id="contact-linkedin" placeholder="https://linkedin.com/in/..." />
-      </div>
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="text" id="contact-phone" placeholder="+1234567890" />
-      </div>
-      <button class="btn btn-primary" id="save-about">Save About & Contact</button>
-      <div id="about-success" class="success" style="margin-top:10px;">✅ Saved successfully!</div>
     </div>
+
+    <!-- ===================== DOCUMENTS TAB ===================== -->
+    <div class="tab-panel" id="tab-documents">
+      <div class="form-card static">
+        <h3>Upload a document</h3>
+        <div class="hint">Upload your resume, CV, or certificates. These will appear as downloadable files on your portfolio.</div>
+
+        <div class="doc-upload-row">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Category</label>
+            <select id="doc-category">
+              <option value="Resume">Resume</option>
+              <option value="CV">CV</option>
+              <option value="Certificate">Certificate</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Label (optional)</label>
+            <input type="text" id="doc-label" placeholder="e.g. AWS Certified Cloud Practitioner" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>File (PDF, image, doc)</label>
+            <input type="file" id="doc-file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+          </div>
+        </div>
+        <div class="doc-progress" id="doc-progress">
+          <div class="doc-progress-bar" id="doc-progress-bar"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" id="doc-upload-btn">⬆ Upload</button>
+        </div>
+      </div>
+
+      <div class="project-list" id="doc-list">
+        <div class="empty-state">Loading documents…</div>
+      </div>
+    </div>
+
+    <footer>
+      <span>Anthony Njau — Admin</span>
+      <span><a href="#" id="logout-btn">🚪 Logout</a></span>
+    </footer>
+
   </div>
 </div>
 
 <script>
-  // Firebase Config
+  /* =========================================================
+     FIREBASE CONFIG – same as your portfolio
+     ========================================================= */
   const firebaseConfig = {
     apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
     authDomain: "portfolio-management-ed2d5.firebaseapp.com",
@@ -164,20 +538,17 @@
     measurementId: "G-X797LW4YQB"
   };
 
-  const ADMIN_PASSWORD = 'anthony2026';
-  let db = null;
-
-  // DOM refs
-  const loginBox = document.getElementById('login-box');
+  // ----- DOM refs -----
+  const loginOverlay = document.getElementById('login-overlay');
   const adminPanel = document.getElementById('admin-panel');
   const loginBtn = document.getElementById('login-btn');
   const loginPw = document.getElementById('admin-pw');
   const loginError = document.getElementById('login-error');
-  const logoutBtn = document.getElementById('logout-btn');
 
-  // Projects
   const projectList = document.getElementById('project-list');
   const formCard = document.getElementById('project-form');
+  const formTitle = document.getElementById('form-title');
+  const editId = document.getElementById('edit-id');
   const fTitle = document.getElementById('f-title');
   const fDesc = document.getElementById('f-desc');
   const fImage = document.getElementById('f-image');
@@ -186,38 +557,70 @@
   const saveBtn = document.getElementById('save-project');
   const cancelBtn = document.getElementById('cancel-edit');
   const showAddBtn = document.getElementById('show-add-form');
-  const projectSuccess = document.getElementById('project-success');
+  const refreshBtn = document.getElementById('refresh-list');
+  const logoutBtn = document.getElementById('logout-btn');
 
-  // About
-  const aboutTagline = document.getElementById('about-tagline');
-  const aboutText = document.getElementById('about-text');
-  const contactEmail = document.getElementById('contact-email');
-  const contactLinkedin = document.getElementById('contact-linkedin');
-  const contactPhone = document.getElementById('contact-phone');
-  const saveAboutBtn = document.getElementById('save-about');
-  const aboutSuccess = document.getElementById('about-success');
+  // site info refs
+  const sTagline = document.getElementById('s-tagline');
+  const sAbout = document.getElementById('s-about');
+  const sEmail = document.getElementById('s-email');
+  const sLinkedin = document.getElementById('s-linkedin');
+  const sName = document.getElementById('s-name');
+  const sRole = document.getElementById('s-role');
+  const saveSettingsBtn = document.getElementById('save-settings');
+  const settingsSaveMsg = document.getElementById('settings-save-msg');
 
-  // Init Firebase
+  // documents refs
+  const docCategory = document.getElementById('doc-category');
+  const docLabel = document.getElementById('doc-label');
+  const docFile = document.getElementById('doc-file');
+  const docUploadBtn = document.getElementById('doc-upload-btn');
+  const docProgress = document.getElementById('doc-progress');
+  const docProgressBar = document.getElementById('doc-progress-bar');
+  const docList = document.getElementById('doc-list');
+
+  // ----- state -----
+  const ADMIN_PASSWORD = 'anthony2026'; // change this!
+  let db = null;
+  let storage = null;
+  let projects = [];
+  let documents = [];
+  let editingId = null;
+
+  // ----- init firebase -----
   function initFirebase() {
     try {
       firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
+      storage = firebase.storage();
       return true;
-    } catch(e) {
-      console.warn('Firebase init warning:', e.message);
+    } catch (e) {
+      alert('Firebase init error: ' + e.message);
       return false;
     }
   }
 
-  // Login
+  // ----- tabs -----
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ----- login -----
   loginBtn.addEventListener('click', function() {
     const pw = loginPw.value.trim();
     if (pw === ADMIN_PASSWORD) {
-      loginBox.style.display = 'none';
+      loginOverlay.classList.add('hidden');
       adminPanel.classList.add('active');
-      initFirebase();
-      loadProjects();
-      loadAbout();
+      if (initFirebase()) {
+        loadProjects();
+        loadSettings();
+        loadDocuments();
+      }
     } else {
       loginError.style.display = 'block';
       loginPw.value = '';
@@ -229,15 +632,20 @@
     if (e.key === 'Enter') loginBtn.click();
   });
 
-  // Logout
-  logoutBtn.addEventListener('click', function() {
+  // ----- logout -----
+  logoutBtn.addEventListener('click', function(e) {
+    e.preventDefault();
     adminPanel.classList.remove('active');
-    loginBox.style.display = 'block';
+    loginOverlay.classList.remove('hidden');
     loginPw.value = '';
     loginError.style.display = 'none';
+    projects = [];
+    projectList.innerHTML = '<div class="empty-state">Loading projects…</div>';
   });
 
-  // Load Projects
+  // ========================================================
+  // PROJECTS
+  // ========================================================
   function loadProjects() {
     if (!db) return;
     db.collection('projects').onSnapshot((snapshot) => {
@@ -247,113 +655,280 @@
         data._id = doc.id;
         list.push(data);
       });
-      renderProjectList(list);
+      list.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() || 0;
+        const tb = b.createdAt?.toMillis?.() || 0;
+        return ta - tb;
+      });
+      projects = list;
+      renderList();
     }, (err) => {
-      projectList.innerHTML = `<div style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+      projectList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
     });
   }
 
-  function renderProjectList(projects) {
+  function renderList() {
     if (!projects.length) {
-      projectList.innerHTML = '<div style="color:#71717A; font-style:italic;">No projects yet.</div>';
+      projectList.innerHTML = `<div class="empty-state">No projects yet. Add your first one!</div>`;
       return;
     }
     let html = '';
     projects.slice().reverse().forEach(p => {
+      const tags = (p.tags || []).join(', ');
       html += `
-        <div style="background:#F4F4F5; padding:12px 16px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
+        <div class="project-item">
+          <div class="project-info">
             <strong>${escapeHtml(p.title || 'Untitled')}</strong>
-            <div style="font-size:13px; color:#71717A;">${escapeHtml(p.desc || '')}</div>
+            <span class="meta">${escapeHtml(p.desc || '')} ${tags ? '· ' + escapeHtml(tags) : ''}</span>
           </div>
-          <div>
-            <button class="btn btn-danger" style="padding:4px 12px; font-size:12px;" onclick="deleteProject('${p._id}')">Delete</button>
+          <div class="project-actions">
+            <button class="btn btn-outline btn-sm" data-id="${p._id}" data-action="edit">✎ Edit</button>
+            <button class="btn btn-danger btn-sm" data-id="${p._id}" data-action="delete">✕ Delete</button>
           </div>
         </div>
       `;
     });
     projectList.innerHTML = html;
+
+    projectList.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', () => editProject(btn.dataset.id));
+    });
+    projectList.querySelectorAll('[data-action="delete"]').forEach(btn => {
+      btn.addEventListener('click', () => deleteProject(btn.dataset.id));
+    });
   }
 
-  window.deleteProject = function(id) {
-    if (!db) return;
-    if (!confirm('Delete this project?')) return;
-    db.collection('projects').doc(id).delete()
-      .then(() => { /* handled by real-time update */ })
-      .catch(err => alert('Error: ' + err.message));
-  };
+  function editProject(id) {
+    const p = projects.find(proj => proj._id === id);
+    if (!p) return;
+    editingId = id;
+    formTitle.textContent = '✎ Edit project';
+    editId.value = id;
+    fTitle.value = p.title || '';
+    fDesc.value = p.desc || '';
+    fImage.value = p.image || '';
+    fLink.value = p.link || '';
+    fTags.value = (p.tags || []).join(', ');
+    formCard.classList.add('open');
+    formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
-  // Save Project
+  function deleteProject(id) {
+    if (!db) return;
+    if (!confirm('Delete this project permanently?')) return;
+    db.collection('projects').doc(id).delete()
+      .then(() => { /* real-time update handles it */ })
+      .catch(err => alert('Delete error: ' + err.message));
+  }
+
   function saveProject() {
     if (!db) return;
     const title = fTitle.value.trim();
     if (!title) { alert('Title is required.'); return; }
+
     const data = {
       title,
       desc: fDesc.value.trim(),
       image: fImage.value.trim(),
       link: fLink.value.trim(),
       tags: fTags.value.split(',').map(s => s.trim()).filter(Boolean),
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     };
-    db.collection('projects').add(data)
-      .then(() => {
-        formCard.style.display = 'none';
-        fTitle.value = ''; fDesc.value = ''; fImage.value = ''; fLink.value = ''; fTags.value = '';
-        projectSuccess.style.display = 'block';
-        setTimeout(() => projectSuccess.style.display = 'none', 3000);
-      })
-      .catch(err => alert('Error: ' + err.message));
+
+    const id = editId.value;
+    const promise = id
+      ? db.collection('projects').doc(id).update(data)
+      : db.collection('projects').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+    promise.then(() => {
+      resetForm();
+    }).catch(err => alert('Save error: ' + err.message));
   }
 
-  // Save About
-  function saveAbout() {
-    if (!db) return;
-    const data = {
-      tagline: aboutTagline.value.trim(),
-      text: aboutText.value.trim(),
-      email: contactEmail.value.trim(),
-      linkedin: contactLinkedin.value.trim(),
-      phone: contactPhone.value.trim(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-    db.collection('settings').doc('about').set(data, { merge: true })
-      .then(() => {
-        aboutSuccess.style.display = 'block';
-        setTimeout(() => aboutSuccess.style.display = 'none', 3000);
-      })
-      .catch(err => alert('Error: ' + err.message));
+  function resetForm() {
+    formCard.classList.remove('open');
+    editId.value = '';
+    fTitle.value = '';
+    fDesc.value = '';
+    fImage.value = '';
+    fLink.value = '';
+    fTags.value = '';
+    editingId = null;
+    formTitle.textContent = 'Add project';
   }
 
-  // Load About
-  function loadAbout() {
+  showAddBtn.addEventListener('click', () => {
+    resetForm();
+    formCard.classList.add('open');
+    formTitle.textContent = '＋ Add project';
+    fTitle.focus();
+  });
+
+  cancelBtn.addEventListener('click', resetForm);
+  saveBtn.addEventListener('click', saveProject);
+
+  refreshBtn.addEventListener('click', () => {
+    if (db) loadProjects();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && formCard.classList.contains('open')) resetForm();
+  });
+
+  // ========================================================
+  // SITE INFO (about + contact) — stored in settings/site
+  // ========================================================
+  function loadSettings() {
     if (!db) return;
-    db.collection('settings').doc('about').onSnapshot((doc) => {
-      if (doc.exists) {
-        const data = doc.data();
-        aboutTagline.value = data.tagline || '';
-        aboutText.value = data.text || '';
-        contactEmail.value = data.email || '';
-        contactLinkedin.value = data.linkedin || '';
-        contactPhone.value = data.phone || '';
-      }
+    db.collection('settings').doc('site').get().then(doc => {
+      const data = doc.exists ? doc.data() : {};
+      sTagline.value = data.tagline || '';
+      sAbout.value = data.about || '';
+      sEmail.value = data.email || '';
+      sLinkedin.value = data.linkedin || '';
+      sName.value = data.name || '';
+      sRole.value = data.role || '';
+    }).catch(err => {
+      console.error('Could not load settings:', err.message);
     });
   }
 
-  // Event listeners
-  showAddBtn.addEventListener('click', () => {
-    formCard.style.display = 'block';
-    formCard.scrollIntoView({ behavior: 'smooth' });
+  saveSettingsBtn.addEventListener('click', function() {
+    if (!db) return;
+    const data = {
+      tagline: sTagline.value.trim(),
+      about: sAbout.value.trim(),
+      email: sEmail.value.trim(),
+      linkedin: sLinkedin.value.trim(),
+      name: sName.value.trim(),
+      role: sRole.value.trim(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('settings').doc('site').set(data, { merge: true })
+      .then(() => {
+        settingsSaveMsg.style.display = 'block';
+        setTimeout(() => { settingsSaveMsg.style.display = 'none'; }, 2200);
+      })
+      .catch(err => alert('Save error: ' + err.message));
   });
 
-  cancelBtn.addEventListener('click', () => {
-    formCard.style.display = 'none';
-    fTitle.value = ''; fDesc.value = ''; fImage.value = ''; fLink.value = ''; fTags.value = '';
+  // ========================================================
+  // DOCUMENTS (resume / CV / certificates) — Firebase Storage
+  // ========================================================
+  function loadDocuments() {
+    if (!db) return;
+    db.collection('documents').onSnapshot((snapshot) => {
+      const list = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        data._id = doc.id;
+        list.push(data);
+      });
+      list.sort((a, b) => {
+        const ta = a.createdAt?.toMillis?.() || 0;
+        const tb = b.createdAt?.toMillis?.() || 0;
+        return tb - ta;
+      });
+      documents = list;
+      renderDocList();
+    }, (err) => {
+      docList.innerHTML = `<div class="empty-state" style="color:#B91C1C;">⚠️ Error loading: ${err.message}</div>`;
+    });
+  }
+
+  function renderDocList() {
+    if (!documents.length) {
+      docList.innerHTML = `<div class="empty-state">No documents uploaded yet.</div>`;
+      return;
+    }
+    let html = '';
+    documents.forEach(d => {
+      html += `
+        <div class="project-item">
+          <div class="project-info">
+            <strong>${escapeHtml(d.label || d.fileName || 'Untitled')} <span class="doc-cat-badge" style="margin-left:8px;">${escapeHtml(d.category || 'Document')}</span></strong>
+            <span class="meta">${escapeHtml(d.fileName || '')}</span>
+          </div>
+          <div class="project-actions">
+            <a class="btn btn-outline btn-sm" href="${escapeHtml(d.url)}" target="_blank" rel="noopener">↗ View</a>
+            <button class="btn btn-danger btn-sm" data-id="${d._id}" data-action="delete-doc">✕ Delete</button>
+          </div>
+        </div>
+      `;
+    });
+    docList.innerHTML = html;
+
+    docList.querySelectorAll('[data-action="delete-doc"]').forEach(btn => {
+      btn.addEventListener('click', () => deleteDocument(btn.dataset.id));
+    });
+  }
+
+  function deleteDocument(id) {
+    const d = documents.find(doc => doc._id === id);
+    if (!d) return;
+    if (!confirm('Delete this document permanently?')) return;
+
+    const removeRecord = () => db.collection('documents').doc(id).delete();
+
+    if (d.storagePath && storage) {
+      storage.ref(d.storagePath).delete()
+        .then(removeRecord)
+        .catch(err => {
+          // still remove the record even if the file is already gone from storage
+          console.warn('Storage delete warning:', err.message);
+          removeRecord();
+        })
+        .catch(err => alert('Delete error: ' + err.message));
+    } else {
+      removeRecord().catch(err => alert('Delete error: ' + err.message));
+    }
+  }
+
+  docUploadBtn.addEventListener('click', function() {
+    if (!storage || !db) return;
+    const file = docFile.files[0];
+    if (!file) { alert('Choose a file first.'); return; }
+
+    const category = docCategory.value;
+    const label = docLabel.value.trim();
+    const path = 'documents/' + Date.now() + '_' + file.name;
+    const ref = storage.ref(path);
+    const task = ref.put(file);
+
+    docProgress.style.display = 'block';
+    docProgressBar.style.width = '0%';
+    docUploadBtn.disabled = true;
+
+    task.on('state_changed', (snap) => {
+      const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+      docProgressBar.style.width = pct + '%';
+    }, (err) => {
+      docProgress.style.display = 'none';
+      docUploadBtn.disabled = false;
+      alert('Upload error: ' + err.message);
+    }, () => {
+      task.snapshot.ref.getDownloadURL().then(url => {
+        return db.collection('documents').add({
+          category,
+          label,
+          fileName: file.name,
+          storagePath: path,
+          url,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }).then(() => {
+        docProgress.style.display = 'none';
+        docUploadBtn.disabled = false;
+        docFile.value = '';
+        docLabel.value = '';
+      }).catch(err => {
+        docProgress.style.display = 'none';
+        docUploadBtn.disabled = false;
+        alert('Save error: ' + err.message);
+      });
+    });
   });
 
-  saveBtn.addEventListener('click', saveProject);
-  saveAboutBtn.addEventListener('click', saveAbout);
-
+  // ----- helpers -----
   function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>"']/g, c => ({
@@ -361,7 +936,7 @@
     })[c]);
   }
 
-  console.log('✅ Admin panel ready. Password: anthony2026');
+  console.log('Admin panel ready — default password: anthony2026');
 </script>
 </body>
 </html>
