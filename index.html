@@ -9,13 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
-    /* ----- reset & base ----- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --ink: #18181B;
       --paper: #FAFAFA;
@@ -28,129 +22,45 @@
       --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
       --shadow-hover: 0 20px 40px -12px rgba(0,0,0,0.12);
     }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
+    html { scroll-behavior: smooth; }
     body {
-      margin: 0;
       background: var(--paper);
       color: var(--ink);
       font-family: 'Inter', sans-serif;
       line-height: 1.65;
       -webkit-font-smoothing: antialiased;
     }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 0 28px; }
 
-    .wrap {
-      max-width: 880px;
-      margin: 0 auto;
-      padding: 0 28px;
-    }
-
-    /* ----- header (sticky, refined) ----- */
+    /* ---- HEADER ---- */
     header {
       border-bottom: 1px solid var(--line);
       padding: 48px 0 28px;
-      position: sticky;
-      top: 0;
-      background: rgba(250, 250, 250, 0.75);
+      position: sticky; top: 0;
+      background: rgba(250,250,250,0.75);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       z-index: 10;
-      transition: padding 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+      transition: padding 0.3s ease, box-shadow 0.3s ease;
     }
+    header.scrolled { padding: 16px 0; box-shadow: 0 1px 0 var(--line), 0 4px 14px rgba(0,0,0,0.03); }
+    header.scrolled h1 { font-size: 22px; }
+    header.scrolled .role, header.scrolled .eyebrow { display: none; }
+    .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; font-weight: 600; }
+    h1 { font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 42px; margin: 0 0 4px; letter-spacing: -0.02em; color: #0C0C0E; transition: font-size 0.3s ease; }
+    .role { font-size: 15px; color: var(--muted); margin: 0; }
+    nav { margin-top: 20px; display: flex; gap: 28px; flex-wrap: wrap; }
+    nav a { font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; padding-bottom: 4px; border-bottom: 1.5px solid transparent; transition: border-color 0.2s, color 0.2s; }
+    nav a:hover { border-bottom-color: var(--accent); color: var(--accent-deep); }
 
-    header.scrolled {
-      padding: 16px 0;
-      background: rgba(250, 250, 250, 0.88);
-      box-shadow: 0 1px 0 var(--line), 0 4px 14px rgba(0,0,0,0.03);
-    }
-
-    header.scrolled h1 {
-      font-size: 22px;
-    }
-
-    header.scrolled .role,
-    header.scrolled .eyebrow {
-      display: none;
-    }
-
-    .eyebrow {
-      font-size: 11px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin: 0 0 8px;
-      font-weight: 600;
-      opacity: 0.8;
-    }
-
-    h1 {
-      font-family: 'Source Serif 4', serif;
-      font-weight: 600;
-      font-size: 42px;
-      margin: 0 0 4px;
-      letter-spacing: -0.02em;
-      color: #0C0C0E;
-    }
-
-    .role {
-      font-size: 15px;
-      color: var(--muted);
-      font-weight: 400;
-      margin: 0;
-    }
-
-    nav {
-      margin-top: 20px;
-      display: flex;
-      gap: 28px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    nav a {
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      color: var(--ink);
-      text-decoration: none;
-      padding-bottom: 4px;
-      border-bottom: 1.5px solid transparent;
-      transition: border-color 0.2s, color 0.2s;
-    }
-
-    nav a:hover {
-      border-bottom-color: var(--accent);
-      color: var(--accent-deep);
-    }
-
-    /* ----- about (soft reveal) ----- */
+    /* ---- ABOUT ---- */
     .about {
       padding: 44px 0 38px;
       border-bottom: 1px solid var(--line);
-      opacity: 0;
-      transform: translateY(12px);
+      opacity: 0; transform: translateY(12px);
       transition: opacity 0.7s ease, transform 0.7s ease;
     }
-
-    .about.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .about p {
-      font-size: 16px;
-      max-width: 640px;
-      margin: 0 0 14px;
-      color: #27272A;
-    }
-
-    .about p:last-child {
-      margin-bottom: 0;
-    }
-
+    .about.visible { opacity: 1; transform: translateY(0); }
     .tagline {
       font-family: 'Source Serif 4', serif;
       font-style: italic;
@@ -161,217 +71,98 @@
       padding-left: 20px;
       margin-bottom: 24px;
     }
+    .about p { font-size: 16px; max-width: 640px; margin: 0 0 14px; color: #27272A; }
+    .about p:last-child { margin-bottom: 0; }
 
-    /* ----- section head ----- */
-    .section-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin: 52px 0 24px;
+    /* ---- CONTACT STRIP ---- */
+    .contact-strip {
+      display: flex; gap: 20px; flex-wrap: wrap;
+      margin-top: 22px; padding-top: 18px;
+      border-top: 1px solid var(--line);
     }
-
-    .section-head h2 {
-      font-family: 'Source Serif 4', serif;
-      font-weight: 600;
-      font-size: 26px;
-      letter-spacing: -0.01em;
+    .contact-strip a {
+      font-size: 13px; font-weight: 500;
+      color: var(--accent-deep); text-decoration: none;
+      border-bottom: 1px dotted var(--accent);
+      transition: color 0.2s;
     }
+    .contact-strip a:hover { color: var(--accent); }
 
-    .count {
-      font-size: 12px;
-      color: var(--muted);
-      background: var(--card-bg);
-      padding: 2px 14px;
-      border-radius: 30px;
-      font-weight: 500;
-    }
+    /* ---- SECTION HEAD ---- */
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 52px 0 24px; }
+    .section-head h2 { font-family: 'Source Serif 4', serif; font-weight: 600; font-size: 26px; letter-spacing: -0.01em; }
+    .count { font-size: 12px; color: var(--muted); background: var(--card-bg); padding: 2px 14px; border-radius: 30px; font-weight: 500; }
 
-    /* ----- projects grid (cards with class) ----- */
+    /* ---- PROJECT GRID ---- */
     #projects {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 24px;
-      padding-bottom: 16px;
+      gap: 24px; padding-bottom: 16px;
     }
-
     .card {
-      background: #FFFFFF;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
+      background: #fff; border: 1px solid var(--line);
+      border-radius: var(--radius); overflow: hidden;
       box-shadow: var(--shadow-sm);
-      opacity: 0;
-      transform: translateY(40px) scale(0.97);
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity: 0; transform: translateY(40px) scale(0.97);
+      transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1),
+                  transform 0.6s cubic-bezier(0.16,1,0.3,1),
                   box-shadow 0.3s ease;
-      display: flex;
-      flex-direction: column;
+      display: flex; flex-direction: column;
     }
+    .card.visible { opacity: 1; transform: translateY(0) scale(1); }
+    .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-5px) scale(1); border-color: #D4D4D8; }
+    .card-img-wrap { overflow: hidden; background: #F1F1F3; }
+    .card-img { width: 100%; height: 170px; object-fit: cover; display: block; transition: transform 0.6s ease; }
+    .card:hover .card-img { transform: scale(1.04); }
+    .card-img-placeholder { width: 100%; height: 170px; background: #EEEEF2; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+    .card-body { padding: 18px 20px 22px; flex: 1; display: flex; flex-direction: column; }
+    .card-title { font-family: 'Source Serif 4', serif; font-size: 19px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .tag { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-deep); background: #FEF3E8; padding: 2px 12px; border-radius: 30px; border: 1px solid #FADDC6; }
+    .card-desc { font-size: 14px; color: #3F3F46; margin: 0 0 18px; flex: 1; line-height: 1.5; }
+    .card-link { font-size: 13px; font-weight: 500; color: var(--accent-deep); text-decoration: none; border-bottom: 1.5px solid var(--accent); align-self: flex-start; transition: color 0.2s; }
+    .card-link:hover { color: #B45309; }
+    .empty, .error { font-size: 15px; color: var(--muted); padding: 30px 0; grid-column: 1/-1; text-align: center; }
+    .error { color: #B91C1C; }
 
-    .card.visible {
-      opacity: 1;
-      transform: translateY(0) scale(1);
+    /* ---- DOCUMENTS SECTION ---- */
+    #doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px; padding-bottom: 16px;
     }
-
-    .card:hover {
-      box-shadow: var(--shadow-hover);
-      transform: translateY(-5px) scale(1);
-      border-color: #D4D4D8;
+    .doc-card {
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 12px; padding: 20px 20px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow-sm);
+      opacity: 0; transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.3s ease;
     }
+    .doc-card.visible { opacity: 1; transform: translateY(0); }
+    .doc-card:hover { box-shadow: var(--shadow-hover); }
+    .doc-icon { font-size: 28px; }
+    .doc-label { font-family: 'Source Serif 4', serif; font-size: 16px; font-weight: 600; }
+    .doc-cat { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-deep); background: #FEF3E8; padding: 2px 10px; border-radius: 30px; border: 1px solid #FADDC6; align-self: flex-start; }
+    .doc-link { font-size: 13px; font-weight: 500; color: var(--accent-deep); text-decoration: none; border-bottom: 1.5px solid var(--accent); align-self: flex-start; margin-top: auto; transition: color 0.2s; }
+    .doc-link:hover { color: var(--accent); }
 
-    .card-img-wrap {
-      overflow: hidden;
-      background: #F1F1F3;
-    }
+    /* ---- FOOTER ---- */
+    footer { margin-top: 60px; padding: 28px 0 48px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    footer a { color: var(--accent-deep); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+    footer a:hover { color: var(--accent); }
 
-    .card-img {
-      width: 100%;
-      height: 170px;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.6s ease;
-      background: #E9E9ED;
-    }
-
-    .card:hover .card-img {
-      transform: scale(1.04);
-    }
-
-    .card-img-placeholder {
-      width: 100%;
-      height: 170px;
-      background: #EEEEF2;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 400;
-      letter-spacing: 0.02em;
-    }
-
-    .card-body {
-      padding: 18px 20px 22px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card-title {
-      font-family: 'Source Serif 4', serif;
-      font-size: 19px;
-      font-weight: 600;
-      margin: 0 0 8px;
-      letter-spacing: -0.01em;
-    }
-
-    .card-tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .tag {
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--accent-deep);
-      background: #FEF3E8;
-      padding: 2px 12px;
-      border-radius: 30px;
-      border: 1px solid #FADDC6;
-    }
-
-    .card-desc {
-      font-size: 14px;
-      color: #3F3F46;
-      margin: 0 0 18px;
-      flex: 1;
-      line-height: 1.5;
-    }
-
-    .card-link {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--accent-deep);
-      text-decoration: none;
-      border-bottom: 1.5px solid var(--accent);
-      align-self: flex-start;
-      transition: color 0.2s, border-color 0.2s;
-    }
-
-    .card-link:hover {
-      color: #B45309;
-      border-bottom-color: #B45309;
-    }
-
-    .empty,
-    .error {
-      font-size: 15px;
-      color: var(--muted);
-      padding: 30px 0;
-      grid-column: 1/-1;
-      text-align: center;
-    }
-
-    .error {
-      color: #B91C1C;
-    }
-
-    /* ----- footer ----- */
-    footer {
-      margin-top: 60px;
-      padding: 28px 0 48px;
-      border-top: 1px solid var(--line);
-      font-size: 13px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    footer a {
-      color: var(--accent-deep);
-      text-decoration: none;
-      font-weight: 450;
-      border-bottom: 1px dotted transparent;
-      transition: border-color 0.2s, color 0.2s;
-    }
-
-    footer a:hover {
-      border-bottom-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* ----- responsive ----- */
     @media (max-width: 600px) {
-      h1 {
-        font-size: 30px;
-      }
-      .about {
-        padding: 32px 0 28px;
-      }
-      .section-head {
-        margin-top: 40px;
-      }
-      .tagline {
-        font-size: 17px;
-        padding-left: 16px;
-      }
-      .card-body {
-        padding: 16px 16px 20px;
-      }
+      h1 { font-size: 30px; }
+      .about { padding: 32px 0 28px; }
+      .section-head { margin-top: 40px; }
+      .tagline { font-size: 17px; padding-left: 16px; }
     }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- header -->
   <header>
     <p class="eyebrow">Portfolio · Information Science</p>
     <h1>Anthony Njau</h1>
@@ -379,39 +170,47 @@
     <nav>
       <a href="#about">About</a>
       <a href="#projects">Projects</a>
+      <a href="#documents">Documents</a>
       <a href="#contact">Contact</a>
     </nav>
   </header>
 
-  <!-- about -->
+  <!-- ABOUT — populated from Firestore settings/site -->
   <section class="about" id="about">
-    <p class="tagline">“Information is only valuable once it's organized, accessible, and trusted.”</p>
-    <p>Anthony Njau holds a BSc in Information Science and works at the intersection of data, systems, and structure — turning scattered information into something people can actually find, understand, and use.</p>
-    <p>His background combines a grounding in information organization and retrieval with a practical, hands-on approach to building and managing systems that hold up under real-world use. He's drawn to problems where clarity is the missing piece: messy data, disconnected processes, or tools that don't quite fit how people actually work.</p>
-    <p>This page is a living record of that work — updated as new projects come together.</p>
+    <p class="tagline" id="bio-tagline">"Information is only valuable once it's organized, accessible, and trusted."</p>
+    <div id="bio-paragraphs">
+      <p>Anthony Njau holds a BSc in Information Science and works at the intersection of data, systems, and structure — turning scattered information into something people can actually find, understand, and use.</p>
+      <p>His background combines a grounding in information organization and retrieval with a practical, hands-on approach to building and managing systems that hold up under real-world use.</p>
+      <p>This page is a living record of that work — updated as new projects come together.</p>
+    </div>
+    <div class="contact-strip" id="contact-strip" style="display:none;"></div>
   </section>
 
-  <!-- projects heading -->
+  <!-- PROJECTS -->
   <div class="section-head">
     <h2>Projects</h2>
     <span class="count" id="proj-count"></span>
   </div>
+  <div id="projects"><p class="empty">Loading projects…</p></div>
 
-  <!-- projects grid -->
-  <div id="projects"></div>
+  <!-- DOCUMENTS -->
+  <div class="section-head" id="doc-section-head" style="display:none;">
+    <h2>Documents</h2>
+    <span class="count" id="doc-count"></span>
+  </div>
+  <div id="doc-grid"></div>
 
-  <!-- footer -->
+  <!-- FOOTER -->
   <footer id="contact">
     <span>Anthony Njau — Information Science</span>
-    <span><a href="#">anthony@example.com</a> · <a href="#">LinkedIn</a></span>
+    <span id="footer-contact">
+      <a href="#">Contact</a>
+    </span>
   </footer>
 
 </div>
 
 <script>
-  /* =========================================================
-     FIREBASE CONFIG – replace with your own
-     ========================================================= */
   var firebaseConfig = {
     apiKey: "AIzaSyDVfWCCyCGfbVhw3sQNIOTkYapfo7B9B1M",
     authDomain: "portfolio-management-ed2d5.firebaseapp.com",
@@ -423,120 +222,185 @@
     measurementId: "G-X797LW4YQB"
   };
 
-  var projectsEl = document.getElementById("projects");
-  var countEl = document.getElementById("proj-count");
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.firestore();
 
-  function showError(msg) {
-    projectsEl.innerHTML = '<p class="error">' + msg + '</p>';
-    countEl.textContent = "";
-  }
-
-  if (typeof firebase === "undefined") {
-    showError("Firebase SDK failed to load. Check your internet connection or ad blocker.");
-  } else if (firebaseConfig.apiKey === "YOUR_API_KEY") {
-    showError("Firebase isn't configured yet — replace the placeholder values in firebaseConfig with your real project credentials from the Firebase Console.");
-  } else {
-    try {
-      firebase.initializeApp(firebaseConfig);
-      var db = firebase.firestore();
-
-      db.collection("projects").onSnapshot(function (snapshot) {
-        var projects = [];
-        snapshot.forEach(function (doc) {
-          var data = doc.data();
-          data._id = doc.id;
-          projects.push(data);
-        });
-        projects.sort(function (a, b) {
-          var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-          var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-          return ta - tb;
-        });
-        render(projects);
-      }, function (err) {
-        showError("Could not load projects: " + err.message + " (check your Firestore security rules allow public reads on the 'projects' collection)");
-      });
-    } catch (e) {
-      showError("Firebase failed to initialize: " + e.message);
-    }
-  }
-
+  /* ==============================
+     HELPERS
+  ============================== */
   function escapeHtml(str) {
-    return String(str || "").replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    return String(str || '').replace(/[&<>"']/g, function(c) {
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
 
-  function render(projects) {
-    countEl.textContent = projects.length + (projects.length === 1 ? " entry" : " entries");
+  function observeCards(selector) {
+    var cards = document.querySelectorAll(selector);
+    if (!('IntersectionObserver' in window)) {
+      cards.forEach(function(c) { c.classList.add('visible'); });
+      return;
+    }
+    var obs = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry, i) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          setTimeout(function() { el.classList.add('visible'); }, i * 80);
+          obs.unobserve(el);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
+    cards.forEach(function(c) { obs.observe(c); });
+  }
+
+  /* ==============================
+     SETTINGS / ABOUT / CONTACT
+  ============================== */
+  db.collection('settings').doc('site').onSnapshot(function(doc) {
+    if (!doc.exists) return;
+    var data = doc.data();
+
+    // Tagline
+    if (data.tagline) {
+      document.getElementById('bio-tagline').textContent = '"' + data.tagline + '"';
+    }
+
+    // Paragraphs
+    if (data.paragraphs && data.paragraphs.length) {
+      document.getElementById('bio-paragraphs').innerHTML = data.paragraphs.map(function(p) {
+        return '<p>' + escapeHtml(p) + '</p>';
+      }).join('');
+    }
+
+    // Contact strip (inside about section)
+    var strip = document.getElementById('contact-strip');
+    var links = [];
+    if (data.email) links.push('<a href="mailto:' + escapeHtml(data.email) + '">' + escapeHtml(data.email) + '</a>');
+    if (data.phone) links.push('<a href="tel:' + escapeHtml(data.phone) + '">' + escapeHtml(data.phone) + '</a>');
+    if (data.linkedin) links.push('<a href="' + escapeHtml(data.linkedin) + '" target="_blank" rel="noopener">LinkedIn</a>');
+    if (links.length) {
+      strip.innerHTML = links.join('');
+      strip.style.display = 'flex';
+    }
+
+    // Footer contact
+    var footerLinks = [];
+    if (data.email) footerLinks.push('<a href="mailto:' + escapeHtml(data.email) + '">' + escapeHtml(data.email) + '</a>');
+    if (data.linkedin) footerLinks.push('<a href="' + escapeHtml(data.linkedin) + '" target="_blank" rel="noopener">LinkedIn</a>');
+    if (footerLinks.length) {
+      document.getElementById('footer-contact').innerHTML = footerLinks.join(' · ');
+    }
+  }, function(err) {
+    console.warn('Settings load error:', err.message);
+  });
+
+  /* ==============================
+     PROJECTS
+  ============================== */
+  db.collection('projects').onSnapshot(function(snapshot) {
+    var projects = [];
+    snapshot.forEach(function(doc) {
+      var d = doc.data(); d._id = doc.id;
+      projects.push(d);
+    });
+    projects.sort(function(a, b) {
+      return (a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0)
+           - (b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0);
+    });
+    renderProjects(projects);
+  }, function(err) {
+    document.getElementById('projects').innerHTML = '<p class="error">Could not load projects: ' + err.message + '</p>';
+  });
+
+  function renderProjects(projects) {
+    var el = document.getElementById('projects');
+    var countEl = document.getElementById('proj-count');
+    countEl.textContent = projects.length + (projects.length === 1 ? ' entry' : ' entries');
 
     if (!projects.length) {
-      projectsEl.innerHTML = '<p class="empty">No projects yet — check back soon.</p>';
+      el.innerHTML = '<p class="empty">No projects yet — check back soon.</p>';
       return;
     }
 
-    projectsEl.innerHTML = projects.slice().reverse().map(function (p) {
-      var tagsHtml = (p.tags || []).map(function (t) {
+    el.innerHTML = projects.slice().reverse().map(function(p) {
+      var tagsHtml = (p.tags || []).map(function(t) {
         return '<span class="tag">' + escapeHtml(t) + '</span>';
-      }).join("");
+      }).join('');
       var linkHtml = p.link ? '<a class="card-link" href="' + escapeHtml(p.link) + '" target="_blank" rel="noopener">View project →</a>' : '';
       var imgHtml = p.image
-        ? '<img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy">'
+        ? '<div class="card-img-wrap"><img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy"></div>'
         : '<div class="card-img-placeholder">No image yet</div>';
       return '<div class="card">' +
         imgHtml +
         '<div class="card-body">' +
-        '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
-        '<div class="card-tags">' + tagsHtml + '</div>' +
-        '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
-        linkHtml +
-        '</div>' +
-        '</div>';
-    }).join("");
+          '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
+          '<div class="card-tags">' + tagsHtml + '</div>' +
+          '<p class="card-desc">' + escapeHtml(p.desc) + '</p>' +
+          linkHtml +
+        '</div></div>';
+    }).join('');
 
-    observeCards();
+    observeCards('.card');
   }
 
-  /* ----- Intersection Observer for cards (staggered) ----- */
-  function observeCards() {
-    var cards = document.querySelectorAll(".card");
-    if (!("IntersectionObserver" in window)) {
-      cards.forEach(function (c) { c.classList.add("visible"); });
-      return;
-    }
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry, i) {
-        if (entry.isIntersecting) {
-          var el = entry.target;
-          setTimeout(function () {
-            el.classList.add("visible");
-          }, i * 70);
-          observer.unobserve(el);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: '0px 0px -20px 0px' });
-    cards.forEach(function (c) { observer.observe(c); });
-  }
-
-  /* ----- header scroll effect ----- */
-  window.addEventListener("scroll", function () {
-    var header = document.querySelector("header");
-    if (window.scrollY > 40) {
-      header.classList.add("scrolled");
-    } else {
-      header.classList.remove("scrolled");
-    }
+  /* ==============================
+     DOCUMENTS
+  ============================== */
+  db.collection('documents').onSnapshot(function(snapshot) {
+    var docs = [];
+    snapshot.forEach(function(doc) {
+      var d = doc.data(); d._id = doc.id;
+      docs.push(d);
+    });
+    docs.sort(function(a, b) {
+      return (b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0)
+           - (a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0);
+    });
+    renderDocs(docs);
+  }, function(err) {
+    console.warn('Documents load error:', err.message);
   });
 
-  /* ----- about section reveal on load (with delay) ----- */
-  window.addEventListener('load', function () {
-    const about = document.querySelector('.about');
-    if (about) {
-      // small delay to ensure smoothness
-      setTimeout(function () {
-        about.classList.add('visible');
-      }, 120);
+  function docIcon(category) {
+    var map = { 'Resume': '📄', 'CV': '📋', 'Certificate': '🏅' };
+    return map[category] || '📎';
+  }
+
+  function renderDocs(docs) {
+    var grid = document.getElementById('doc-grid');
+    var head = document.getElementById('doc-section-head');
+    var countEl = document.getElementById('doc-count');
+
+    if (!docs.length) {
+      head.style.display = 'none';
+      grid.innerHTML = '';
+      return;
     }
+
+    head.style.display = 'flex';
+    countEl.textContent = docs.length + (docs.length === 1 ? ' file' : ' files');
+
+    grid.innerHTML = docs.map(function(d) {
+      return '<div class="doc-card">' +
+        '<div class="doc-icon">' + docIcon(d.category) + '</div>' +
+        '<div class="doc-label">' + escapeHtml(d.label || d.fileName || 'Document') + '</div>' +
+        '<span class="doc-cat">' + escapeHtml(d.category || 'Document') + '</span>' +
+        '<a class="doc-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener">Download →</a>' +
+      '</div>';
+    }).join('');
+
+    observeCards('.doc-card');
+  }
+
+  /* ==============================
+     SCROLL EFFECTS
+  ============================== */
+  window.addEventListener('scroll', function() {
+    document.querySelector('header').classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  window.addEventListener('load', function() {
+    var about = document.querySelector('.about');
+    setTimeout(function() { about.classList.add('visible'); }, 120);
   });
 </script>
 </body>
