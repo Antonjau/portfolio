@@ -378,6 +378,55 @@
       border: 1px solid #FADDC6;
     }
 
+    .badge-featured {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--accent-deep);
+      background: #FEF3E8;
+      padding: 2px 10px;
+      border-radius: 30px;
+      border: 1px solid #FADDC6;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .badge-draft {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #71717A;
+      background: #F4F4F5;
+      padding: 2px 10px;
+      border-radius: 30px;
+      border: 1px solid var(--line);
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .project-item.is-draft { opacity: 0.65; }
+    .move-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-right: 4px;
+    }
+    .move-btns button {
+      width: 26px;
+      height: 22px;
+      border: 1px solid var(--line);
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .move-btns button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-deep); }
+    .move-btns button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .project-item-row { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+
     footer {
       margin-top: 40px;
       padding: 24px 0 40px;
@@ -480,6 +529,22 @@
         <div class="form-group">
           <label>Tags (comma separated)</label>
           <input type="text" id="f-tags" placeholder="e.g. Python, UI, Data" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="f-status">
+              <option value="published">Published (visible on site)</option>
+              <option value="draft">Draft (hidden from site)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <label style="display:flex; align-items:center; gap:8px; font-weight:400; margin-top:10px;">
+              <input type="checkbox" id="f-featured" style="width:auto;" />
+              ⭐ Feature this project
+            </label>
+          </div>
         </div>
         <div class="form-actions">
           <button class="btn btn-primary" id="save-project">💾 Save project</button>
@@ -624,6 +689,8 @@
   const fImage = document.getElementById('f-image');
   const fLink = document.getElementById('f-link');
   const fTags = document.getElementById('f-tags');
+  const fStatus = document.getElementById('f-status');
+  const fFeatured = document.getElementById('f-featured');
   const saveBtn = document.getElementById('save-project');
   const cancelBtn = document.getElementById('cancel-edit');
   const showAddBtn = document.getElementById('show-add-form');
@@ -833,21 +900,53 @@
     });
   }
 
+  // Sort projects the same way the public site will: featured first,
+  // then by manual `order` (falls back to original createdAt order for
+  // any project that hasn't been manually reordered yet).
+  function getSortedProjects(list) {
+    const byCreated = list.slice().sort((a, b) => {
+      const ta = a.createdAt?.toMillis?.() || 0;
+      const tb = b.createdAt?.toMillis?.() || 0;
+      return ta - tb;
+    });
+    const fallbackIndex = {};
+    byCreated.forEach((p, i) => { fallbackIndex[p._id] = i; });
+    return list.slice().sort((a, b) => {
+      const fa = a.featured ? 0 : 1;
+      const fb = b.featured ? 0 : 1;
+      if (fa !== fb) return fa - fb;
+      const oa = typeof a.order === 'number' ? a.order : fallbackIndex[a._id];
+      const ob = typeof b.order === 'number' ? b.order : fallbackIndex[b._id];
+      return oa - ob;
+    });
+  }
+
   function renderList() {
     if (!projects.length) {
       projectList.innerHTML = `<div class="empty-state">No projects yet. Add your first one!</div>`;
       return;
     }
+    const sorted = getSortedProjects(projects);
     let html = '';
-    projects.slice().reverse().forEach(p => {
+    sorted.forEach((p, i) => {
       const tags = (p.tags || []).join(', ');
+      const isDraft = p.status === 'draft';
+      const featuredBadge = p.featured ? '<span class="badge-featured">⭐ Featured</span>' : '';
+      const draftBadge = isDraft ? '<span class="badge-draft">Draft</span>' : '';
       html += `
-        <div class="project-item">
-          <div class="project-info">
-            <strong>${escapeHtml(p.title || 'Untitled')}</strong>
-            <span class="meta">${escapeHtml(p.desc || '')} ${tags ? '· ' + escapeHtml(tags) : ''}</span>
+        <div class="project-item ${isDraft ? 'is-draft' : ''}">
+          <div class="project-item-row">
+            <div class="move-btns">
+              <button data-id="${p._id}" data-action="move-up" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button>
+              <button data-id="${p._id}" data-action="move-down" ${i === sorted.length - 1 ? 'disabled' : ''} title="Move down">↓</button>
+            </div>
+            <div class="project-info">
+              <strong>${escapeHtml(p.title || 'Untitled')}${featuredBadge}${draftBadge}</strong>
+              <span class="meta">${escapeHtml(p.desc || '')} ${tags ? '· ' + escapeHtml(tags) : ''}</span>
+            </div>
           </div>
           <div class="project-actions">
+            <button class="btn btn-outline btn-sm" data-id="${p._id}" data-action="toggle-status">${isDraft ? '👁 Publish' : '🙈 Unpublish'}</button>
             <button class="btn btn-outline btn-sm" data-id="${p._id}" data-action="edit">✎ Edit</button>
             <button class="btn btn-danger btn-sm" data-id="${p._id}" data-action="delete">✕ Delete</button>
           </div>
@@ -862,6 +961,41 @@
     projectList.querySelectorAll('[data-action="delete"]').forEach(btn => {
       btn.addEventListener('click', () => deleteProject(btn.dataset.id));
     });
+    projectList.querySelectorAll('[data-action="toggle-status"]').forEach(btn => {
+      btn.addEventListener('click', () => toggleStatus(btn.dataset.id));
+    });
+    projectList.querySelectorAll('[data-action="move-up"]').forEach(btn => {
+      btn.addEventListener('click', () => moveProject(btn.dataset.id, -1));
+    });
+    projectList.querySelectorAll('[data-action="move-down"]').forEach(btn => {
+      btn.addEventListener('click', () => moveProject(btn.dataset.id, 1));
+    });
+  }
+
+  function toggleStatus(id) {
+    if (!firebaseReady || !db) { alert('Firebase not available'); return; }
+    const p = projects.find(proj => proj._id === id);
+    if (!p) return;
+    const newStatus = p.status === 'draft' ? 'published' : 'draft';
+    db.collection('projects').doc(id).update({ status: newStatus })
+      .catch(err => alert('Update error: ' + err.message));
+  }
+
+  function moveProject(id, dir) {
+    if (!firebaseReady || !db) { alert('Firebase not available'); return; }
+    const sorted = getSortedProjects(projects);
+    const idx = sorted.findIndex(p => p._id === id);
+    const swapIdx = idx + dir;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= sorted.length) return;
+    const tmp = sorted[idx];
+    sorted[idx] = sorted[swapIdx];
+    sorted[swapIdx] = tmp;
+
+    const batch = db.batch();
+    sorted.forEach((p, i) => {
+      batch.update(db.collection('projects').doc(p._id), { order: i });
+    });
+    batch.commit().catch(err => alert('Reorder error: ' + err.message));
   }
 
   function editProject(id) {
@@ -875,6 +1009,8 @@
     fImage.value = p.image || '';
     fLink.value = p.link || '';
     fTags.value = (p.tags || []).join(', ');
+    fStatus.value = p.status === 'draft' ? 'draft' : 'published';
+    fFeatured.checked = !!p.featured;
     
     if (p.image) {
       imagePreview.src = p.image;
@@ -905,9 +1041,17 @@
       image: fImage.value.trim(),
       link: fLink.value.trim(),
       tags: fTags.value.split(',').map(s => s.trim()).filter(Boolean),
+      status: fStatus.value,
+      featured: fFeatured.checked,
     };
 
     const id = editId.value;
+    if (!id) {
+      // New project: push it to the end of the manual order.
+      const maxOrder = projects.reduce((max, p) => typeof p.order === 'number' && p.order > max ? p.order : max, -1);
+      data.order = maxOrder + 1;
+    }
+
     const promise = id
       ? db.collection('projects').doc(id).update(data)
       : db.collection('projects').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
@@ -927,6 +1071,8 @@
     fImage.value = '';
     fLink.value = '';
     fTags.value = '';
+    fStatus.value = 'published';
+    fFeatured.checked = false;
     imagePreview.style.display = 'none';
     imagePreview.src = '';
     dropText.textContent = '📤 Drag & drop an image here, or click to browse';
