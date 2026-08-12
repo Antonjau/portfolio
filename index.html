@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Anthony Njau — Portfolio</title>
+  <meta name="description" content="Anthony Njau — BSc Information Science. Projects and work at the intersection of data, systems, and structure.">
+  <meta property="og:title" content="Anthony Njau — Portfolio">
+  <meta property="og:description" content="BSc Information Science. Projects and work at the intersection of data, systems, and structure.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#D97706">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -52,6 +57,11 @@
     nav { margin-top: 20px; display: flex; gap: 28px; flex-wrap: wrap; }
     nav a { font-size: 13px; font-weight: 500; color: var(--ink); text-decoration: none; padding-bottom: 4px; border-bottom: 1.5px solid transparent; transition: border-color 0.2s, color 0.2s; }
     nav a:hover { border-bottom-color: var(--accent); color: var(--accent-deep); }
+    nav a:focus-visible, .card-link:focus-visible, .doc-link:focus-visible, .contact-strip a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 3px;
+    }
 
     /* ---- ABOUT ---- */
     .about {
@@ -108,9 +118,25 @@
                   transform 0.6s cubic-bezier(0.16,1,0.3,1),
                   box-shadow 0.3s ease;
       display: flex; flex-direction: column;
+      position: relative;
     }
     .card.visible { opacity: 1; transform: translateY(0) scale(1); }
     .card:hover { box-shadow: var(--shadow-hover); transform: translateY(-5px) scale(1); border-color: #D4D4D8; }
+    .card.is-featured { border-color: #FADDC6; box-shadow: 0 0 0 1px #FADDC6, var(--shadow-sm); }
+    .featured-ribbon {
+      position: absolute;
+      top: 12px; right: 12px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: white;
+      background: var(--accent);
+      padding: 3px 12px;
+      border-radius: 30px;
+      z-index: 2;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
     .card-img-wrap { overflow: hidden; background: #F1F1F3; }
     .card-img { width: 100%; height: 170px; object-fit: cover; display: block; transition: transform 0.6s ease; }
     .card:hover .card-img { transform: scale(1.04); }
@@ -158,6 +184,11 @@
       .section-head { margin-top: 40px; }
       .tagline { font-size: 17px; padding-left: 16px; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .about, .card, .doc-card { transition: none; opacity: 1; transform: none; }
+    }
   </style>
 </head>
 <body>
@@ -169,7 +200,7 @@
     <p class="role">BSc Information Science</p>
     <nav>
       <a href="#about">About</a>
-      <a href="#projects">Projects</a>
+      <a href="#projects-head">Projects</a>
       <a href="#documents">Documents</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -187,14 +218,14 @@
   </section>
 
   <!-- PROJECTS -->
-  <div class="section-head">
+  <div class="section-head" id="projects-head">
     <h2>Projects</h2>
     <span class="count" id="proj-count"></span>
   </div>
-  <div id="projects"><p class="empty">Loading projects…</p></div>
+  <div id="projects" aria-live="polite"><p class="empty">Loading projects…</p></div>
 
   <!-- DOCUMENTS -->
-  <div class="section-head" id="doc-section-head" style="display:none;">
+  <div class="section-head" id="documents" style="display:none;">
     <h2>Documents</h2>
     <span class="count" id="doc-count"></span>
   </div>
@@ -204,7 +235,7 @@
   <footer id="contact">
     <span>Anthony Njau — Information Science</span>
     <span id="footer-contact">
-      <a href="#">Contact</a>
+      <a href="#about">Contact</a>
     </span>
   </footer>
 
@@ -250,6 +281,28 @@
       });
     }, { threshold: 0.1, rootMargin: '0px 0px -20px 0px' });
     cards.forEach(function(c) { obs.observe(c); });
+  }
+
+  // Same ordering rule as the admin panel: featured projects float to the
+  // top, then manual `order` (falling back to original createdAt order
+  // for anything that hasn't been manually reordered yet). Drafts are
+  // filtered out entirely before this runs.
+  function getSortedProjects(list) {
+    var byCreated = list.slice().sort(function(a, b) {
+      var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return ta - tb;
+    });
+    var fallbackIndex = {};
+    byCreated.forEach(function(p, i) { fallbackIndex[p._id] = i; });
+    return list.slice().sort(function(a, b) {
+      var fa = a.featured ? 0 : 1;
+      var fb = b.featured ? 0 : 1;
+      if (fa !== fb) return fa - fb;
+      var oa = typeof a.order === 'number' ? a.order : fallbackIndex[a._id];
+      var ob = typeof b.order === 'number' ? b.order : fallbackIndex[b._id];
+      return oa - ob;
+    });
   }
 
   /* ==============================
@@ -300,13 +353,12 @@
     var projects = [];
     snapshot.forEach(function(doc) {
       var d = doc.data(); d._id = doc.id;
+      // Backwards compatible: projects saved before the status field
+      // existed have no `status`, and should still show as published.
+      if (d.status === 'draft') return;
       projects.push(d);
     });
-    projects.sort(function(a, b) {
-      return (a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0)
-           - (b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0);
-    });
-    renderProjects(projects);
+    renderProjects(getSortedProjects(projects));
   }, function(err) {
     document.getElementById('projects').innerHTML = '<p class="error">Could not load projects: ' + err.message + '</p>';
   });
@@ -321,7 +373,7 @@
       return;
     }
 
-    el.innerHTML = projects.slice().reverse().map(function(p) {
+    el.innerHTML = projects.map(function(p) {
       var tagsHtml = (p.tags || []).map(function(t) {
         return '<span class="tag">' + escapeHtml(t) + '</span>';
       }).join('');
@@ -329,7 +381,9 @@
       var imgHtml = p.image
         ? '<div class="card-img-wrap"><img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy"></div>'
         : '<div class="card-img-placeholder">No image yet</div>';
-      return '<div class="card">' +
+      var ribbon = p.featured ? '<span class="featured-ribbon">Featured</span>' : '';
+      return '<div class="card' + (p.featured ? ' is-featured' : '') + '">' +
+        ribbon +
         imgHtml +
         '<div class="card-body">' +
           '<div class="card-title">' + escapeHtml(p.title) + '</div>' +
@@ -367,7 +421,7 @@
 
   function renderDocs(docs) {
     var grid = document.getElementById('doc-grid');
-    var head = document.getElementById('doc-section-head');
+    var head = document.getElementById('documents');
     var countEl = document.getElementById('doc-count');
 
     if (!docs.length) {
