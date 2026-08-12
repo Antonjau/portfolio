@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
   <style>
@@ -111,6 +112,7 @@
       transition: background 0.2s;
     }
     .login-box button:hover { background: var(--accent-deep); }
+    .login-box button:disabled { opacity: 0.6; cursor: not-allowed; }
     .login-error {
       color: #B91C1C;
       font-size: 13px;
@@ -416,10 +418,11 @@
 <div id="login-overlay">
   <div class="login-box">
     <h2>🔐 Admin Access</h2>
-    <p>Enter your password to manage your portfolio</p>
-    <input type="password" id="admin-pw" placeholder="Password" />
-    <button id="login-btn">Unlock</button>
-    <div id="login-error" class="login-error">Incorrect password</div>
+    <p>Sign in with your admin account to manage your portfolio</p>
+    <input type="email" id="admin-email" placeholder="Email" autocomplete="username" />
+    <input type="password" id="admin-pw" placeholder="Password" autocomplete="current-password" />
+    <button id="login-btn">Sign in</button>
+    <div id="login-error" class="login-error">Incorrect email or password</div>
   </div>
 </div>
 
@@ -591,7 +594,8 @@
     measurementId: "G-X797LW4YQB"
   };
 
-  const ADMIN_PASSWORD = 'anthony2026';
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
   let db = null;
   let storage = null;
   let firebaseReady = false;
@@ -604,6 +608,7 @@
   const loginOverlay = document.getElementById('login-overlay');
   const adminPanel = document.getElementById('admin-panel');
   const loginBtn = document.getElementById('login-btn');
+  const loginEmail = document.getElementById('admin-email');
   const loginPw = document.getElementById('admin-pw');
   const loginError = document.getElementById('login-error');
   const logoutBtn = document.getElementById('logout-btn');
@@ -652,11 +657,10 @@
   const docSaveMsg = document.getElementById('doc-save-msg');
 
   // =========================================================
-  // INIT FIREBASE
+  // INIT FIRESTORE / STORAGE (called once signed in)
   // =========================================================
   function initFirebase() {
     try {
-      firebase.initializeApp(firebaseConfig);
       db = firebase.firestore();
       storage = firebase.storage();
       firebaseReady = true;
@@ -668,6 +672,34 @@
       return false;
     }
   }
+
+  // =========================================================
+  // AUTH STATE — this is the single source of truth for
+  // whether the admin panel is shown. A real Firebase user
+  // session is required, matching Firestore rules that check
+  // request.auth != null.
+  // =========================================================
+  auth.onAuthStateChanged(function(user) {
+    if (user) {
+      loginOverlay.classList.add('hidden');
+      adminPanel.classList.add('active');
+      loginBtn.disabled = false;
+      loginError.style.display = 'none';
+      initFirebase();
+      if (firebaseReady) {
+        loadProjects();
+        loadSettings();
+        loadDocuments();
+      } else {
+        projectList.innerHTML = '<div class="empty-state">⚠️ Firebase not available. Check your connection.</div>';
+        docList.innerHTML = '<div class="empty-state">⚠️ Firebase not available. Check your connection.</div>';
+      }
+    } else {
+      adminPanel.classList.remove('active');
+      loginOverlay.classList.remove('hidden');
+      loginPw.value = '';
+    }
+  });
 
   // =========================================================
   // TABS
@@ -682,37 +714,40 @@
   });
 
   // =========================================================
-  // LOGIN
+  // LOGIN (Firebase Auth — email/password)
   // =========================================================
-  loginBtn.addEventListener('click', function() {
-    const pw = loginPw.value.trim();
-    if (pw === ADMIN_PASSWORD) {
-      loginOverlay.classList.add('hidden');
-      adminPanel.classList.add('active');
-      initFirebase();
-      if (firebaseReady) {
-        loadProjects();
-        loadSettings();
-        loadDocuments();
-      } else {
-        projectList.innerHTML = '<div class="empty-state">⚠️ Firebase not available. Check your connection.</div>';
-        docList.innerHTML = '<div class="empty-state">⚠️ Firebase not available. Check your connection.</div>';
-      }
-    } else {
+  function attemptLogin() {
+    const email = loginEmail.value.trim();
+    const pw = loginPw.value;
+    if (!email || !pw) {
+      loginError.textContent = 'Enter your email and password.';
       loginError.style.display = 'block';
-      loginPw.value = '';
-      loginPw.focus();
+      return;
     }
-  });
+    loginBtn.disabled = true;
+    loginError.style.display = 'none';
+    auth.signInWithEmailAndPassword(email, pw)
+      .catch(function(err) {
+        loginError.textContent = 'Sign-in failed: ' + err.message;
+        loginError.style.display = 'block';
+        loginPw.value = '';
+        loginPw.focus();
+        loginBtn.disabled = false;
+      });
+  }
 
-  loginPw.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') loginBtn.click();
+  loginBtn.addEventListener('click', attemptLogin);
+
+  [loginEmail, loginPw].forEach(el => {
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') attemptLogin();
+    });
   });
 
   logoutBtn.addEventListener('click', function(e) {
     e.preventDefault();
-    adminPanel.classList.remove('active');
-    loginOverlay.classList.remove('hidden');
+    auth.signOut();
+    loginEmail.value = '';
     loginPw.value = '';
     loginError.style.display = 'none';
   });
@@ -1135,8 +1170,6 @@
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[c]);
   }
-
-  console.log('✅ Admin panel ready — password: anthony2026');
 </script>
 </body>
 </html>
