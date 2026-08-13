@@ -72,7 +72,7 @@
       50% { transform: translate(30px,-24px) scale(1.06); }
     }
 
-    .wrap { max-width: 960px; margin: 0 auto; padding: 0 28px; position: relative; z-index: 1; }
+    .wrap { max-width: min(1240px, 94vw); margin: 0 auto; padding: 0 clamp(18px, 3.5vw, 40px); position: relative; z-index: 1; }
 
     /* ---- HEADER ---- */
     header {
@@ -93,7 +93,7 @@
     .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px 2px var(--accent-line); }
 
     h1 {
-      font-family: var(--display); font-weight: 600; font-size: 46px;
+      font-family: var(--display); font-weight: 600; font-size: clamp(28px, 5vw, 46px);
       margin: 0 0 6px; letter-spacing: -0.02em; color: #FFFFFF;
       transition: font-size 0.4s cubic-bezier(0.16,1,0.3,1);
     }
@@ -156,7 +156,7 @@
     .tagline {
       font-family: var(--display); font-weight: 500; font-style: normal;
       color: var(--ink);
-      font-size: 21px;
+      font-size: clamp(17px, 2.4vw, 21px);
       letter-spacing: -0.01em;
       border-left: 2px solid var(--accent);
       padding-left: 20px;
@@ -300,15 +300,41 @@
     footer a { color: var(--ink-dim); text-decoration: none; font-weight: 500; transition: color 0.2s; }
     footer a:hover { color: var(--accent); }
 
+    @media (min-width: 1400px) {
+      .wrap { max-width: 1320px; }
+      #projects { grid-auto-rows: 220px; gap: 22px; }
+    }
+
+    /* Tablet: step the bento down to 4 columns rather than jumping
+       straight to the 2-column phone layout */
+    @media (max-width: 1024px) and (min-width: 721px) {
+      #projects { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 190px; }
+      .card { grid-column: span 2; grid-row: span 1; }
+      .card.span-lg { grid-column: span 4; grid-row: span 2; }
+      .card.span-tall { grid-column: span 2; grid-row: span 2; }
+      .card.span-wide { grid-column: span 2; grid-row: span 1; }
+    }
+
     @media (max-width: 720px) {
       #projects { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 220px; }
       .card, .card.span-lg, .card.span-tall, .card.span-wide { grid-column: span 2; grid-row: span 1; }
     }
+
+    /* Small phones: single column, let each card size to its own
+       content instead of forcing a fixed row height */
+    @media (max-width: 480px) {
+      .wrap { padding: 0 18px; }
+      .tagline { padding-left: 16px; }
+      #projects { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 14px; }
+      .card, .card.span-lg, .card.span-tall, .card.span-wide { grid-column: span 1; grid-row: span 1; }
+      .card-img-wrap, .card.span-lg .card-img-wrap, .card.span-tall .card-img-wrap { aspect-ratio: 16/9; flex: 0 0 auto; }
+      #doc-grid { grid-template-columns: 1fr; }
+      nav { gap: 8px; }
+      nav a { padding: 7px 13px; font-size: 12px; }
+    }
     @media (max-width: 600px) {
-      h1 { font-size: 32px; }
       .about { padding: 24px 0 28px; }
       .section-head { margin-top: 44px; }
-      .tagline { font-size: 18px; padding-left: 16px; }
       header { padding: 44px 0 26px; }
     }
 
