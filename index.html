@@ -216,6 +216,8 @@
     .card.span-lg { grid-column: span 4; grid-row: span 2; }
     .card.span-tall { grid-column: span 2; grid-row: span 2; }
     .card.span-wide { grid-column: span 3; grid-row: span 1; }
+    .stretch-link { position: absolute; inset: 0; z-index: 1; }
+    .stretch-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--radius); }
 
     .featured-ribbon {
       position: absolute; top: 14px; right: 14px;
@@ -224,8 +226,8 @@
       color: var(--bg); background: var(--accent);
       padding: 4px 12px; border-radius: 30px; z-index: 2;
     }
-    .card-img-wrap { overflow: hidden; background: #1A1A1C; flex: 0 0 auto; }
-    .card.span-lg .card-img-wrap, .card.span-tall .card-img-wrap { flex: 1 1 auto; }
+    .card-img-wrap { overflow: hidden; background: #1A1A1C; flex: 0 0 auto; aspect-ratio: 16 / 9; }
+    .card.span-lg .card-img-wrap, .card.span-tall .card-img-wrap { flex: 1 1 auto; aspect-ratio: auto; }
     .card-img { width: 100%; height: 100%; min-height: 130px; object-fit: cover; display: block; transition: transform 0.7s ease; }
     .card:hover .card-img { transform: scale(1.05); }
     .card-img-placeholder {
@@ -236,23 +238,33 @@
     }
     .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; flex: 0 0 auto; }
     .card.span-lg .card-body, .card.span-tall .card-body { flex: 0 0 auto; }
-    .card-title { font-family: var(--display); font-size: 18px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; color: #fff; }
+    .card-title {
+      font-family: var(--display); font-size: 18px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; color: #fff;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
     .card-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
     .tag {
       font-family: var(--mono); font-size: 10.5px; font-weight: 500;
       color: var(--accent); background: var(--accent-soft);
       padding: 3px 10px; border-radius: 30px; border: 1px solid var(--accent-line);
     }
-    .card-desc { font-size: 13.5px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.55; }
+    .card-desc {
+      font-size: 13.5px; color: var(--ink-dim); margin: 0 0 16px; line-height: 1.55;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
     .card-link {
       font-family: var(--mono); font-size: 12.5px; font-weight: 500;
       color: var(--ink); text-decoration: none; align-self: flex-start;
       border-bottom: 1px solid var(--accent); padding-bottom: 1px;
       transition: color 0.2s, border-color 0.2s;
+      position: relative; z-index: 2;
     }
     .card-link:hover { color: var(--accent); }
     .empty, .error { font-size: 14px; color: var(--muted); padding: 30px 0; grid-column: 1/-1; text-align: center; font-family: var(--mono); }
     .error { color: #F87171; }
+    .fallback { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .fallback a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-line); padding-bottom: 1px; }
+    .fallback a:hover { color: #fff; }
 
     /* ---- DOCUMENTS SECTION ---- */
     #doc-grid {
@@ -271,7 +283,10 @@
     .doc-card.visible { opacity: 1; transform: translateY(0); }
     .doc-card:hover { border-color: var(--accent-line); background: var(--surface-hover); }
     .doc-icon { font-size: 24px; }
-    .doc-label { font-family: var(--display); font-size: 15.5px; font-weight: 600; color: #fff; }
+    .doc-label {
+      font-family: var(--display); font-size: 15.5px; font-weight: 600; color: #fff;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
     .doc-cat { font-family: var(--mono); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 30px; border: 1px solid var(--accent-line); align-self: flex-start; }
     .doc-link { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink); text-decoration: none; align-self: flex-start; margin-top: auto; border-bottom: 1px solid var(--accent); padding-bottom: 1px; transition: color 0.2s; }
     .doc-link:hover { color: var(--accent); }
@@ -489,7 +504,10 @@
   /* ==============================
      PROJECTS
   ============================== */
+  var projectsLoaded = false;
+
   db.collection('projects').onSnapshot(function(snapshot) {
+    projectsLoaded = true;
     var projects = [];
     snapshot.forEach(function(doc) {
       var d = doc.data(); d._id = doc.id;
@@ -500,8 +518,21 @@
     });
     renderProjects(getSortedProjects(projects));
   }, function(err) {
+    projectsLoaded = true;
     document.getElementById('projects').innerHTML = '<p class="error">Could not load projects: ' + err.message + '</p>';
   });
+
+  // Fallback if Firestore never responds — e.g. an ad/content blocker
+  // silently dropping requests to firestore.googleapis.com. Without this
+  // the grid would hang on "Loading projects…" indefinitely.
+  setTimeout(function() {
+    if (projectsLoaded) return;
+    document.getElementById('projects').innerHTML =
+      '<div class="fallback">' +
+        '<p class="empty" style="padding:0;">Having trouble loading projects.</p>' +
+        '<a href="javascript:location.reload()">Refresh the page</a>' +
+      '</div>';
+  }, 7000);
 
   function renderProjects(projects) {
     var el = document.getElementById('projects');
@@ -517,13 +548,14 @@
       var tagsHtml = (p.tags || []).map(function(t) {
         return '<span class="tag">' + escapeHtml(t) + '</span>';
       }).join('');
-      var linkHtml = p.link ? '<a class="card-link" href="' + escapeHtml(p.link) + '" target="_blank" rel="noopener">View project →</a>' : '';
+      var linkHtml = p.link ? '<a class="card-link" href="' + escapeHtml(p.link) + '" target="_blank" rel="noopener">Visit site ↗</a>' : '';
       var imgHtml = p.image
         ? '<div class="card-img-wrap"><img class="card-img" src="' + escapeHtml(p.image) + '" alt="' + escapeHtml(p.title) + '" loading="lazy"></div>'
         : '<div class="card-img-placeholder">no image yet</div>';
       var ribbon = p.featured ? '<span class="featured-ribbon">Featured</span>' : '';
       var sizeClass = bentoClass(p, i);
       return '<div class="card ' + sizeClass + (p.featured ? ' is-featured' : '') + '">' +
+        '<a class="stretch-link" href="project.html?id=' + encodeURIComponent(p._id) + '" aria-label="View details for ' + escapeHtml(p.title) + '"></a>' +
         ribbon +
         imgHtml +
         '<div class="card-body">' +
@@ -575,11 +607,12 @@
     countEl.textContent = docs.length + (docs.length === 1 ? ' file' : ' files');
 
     grid.innerHTML = docs.map(function(d) {
+      var fileLabel = d.label || d.fileName || 'Document';
       return '<div class="doc-card">' +
         '<div class="doc-icon">' + docIcon(d.category) + '</div>' +
-        '<div class="doc-label">' + escapeHtml(d.label || d.fileName || 'Document') + '</div>' +
+        '<div class="doc-label">' + escapeHtml(fileLabel) + '</div>' +
         '<span class="doc-cat">' + escapeHtml(d.category || 'Document') + '</span>' +
-        '<a class="doc-link" href="' + escapeHtml(d.url) + '" target="_blank" rel="noopener">Download →</a>' +
+        '<a class="doc-link" href="' + escapeHtml(d.url) + '" download="' + escapeHtml(d.fileName || fileLabel) + '" target="_blank" rel="noopener">Download →</a>' +
       '</div>';
     }).join('');
 
