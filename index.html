@@ -688,9 +688,78 @@
     if (extra.length) {
       footerLinks.innerHTML += extra.join('');
     }
+
+    renderStats(data.stats || []);
+    renderTestimonials(data.testimonials || []);
+    renderTiers(data.tiers || []);
+    renderFaqs(data.faqs || []);
   }, function(err) {
     console.warn('Settings load error:', err.message);
   });
+
+  /* ==============================
+     LANDING EXTRAS — each only replaces its section's static
+     placeholder markup when Firestore actually has content, so the
+     page never shows an empty section while it's unfilled.
+  ============================== */
+  function renderStats(stats) {
+    if (!stats.length) return;
+    var grid = document.getElementById('stats-grid');
+    grid.innerHTML = stats.map(function(s) {
+      return '<div class="stat-card glass-panel">' +
+        '<div class="stat-value">' + escapeHtml(s.value || '—') + '</div>' +
+        '<div class="stat-label">' + escapeHtml(s.label || '') + '</div>' +
+        (s.sublabel ? '<div class="stat-sub">' + escapeHtml(s.sublabel) + '</div>' : '') +
+      '</div>';
+    }).join('');
+    var note = grid.parentElement.querySelector('.placeholder-note');
+    if (note) note.style.display = 'none';
+  }
+
+  function renderTestimonials(items) {
+    if (!items.length) return;
+    var grid = document.getElementById('testimonials-grid');
+    grid.innerHTML = items.map(function(t) {
+      return '<div class="testimonial-card glass-panel">' +
+        '<p class="testimonial-quote">"' + escapeHtml(t.quote || '') + '"</p>' +
+        '<div class="testimonial-author">' + escapeHtml(t.author || '') + '</div>' +
+        '<div class="testimonial-role">' + escapeHtml(t.role || '') + '</div>' +
+      '</div>';
+    }).join('');
+    var note = grid.parentElement.querySelector('.placeholder-note');
+    if (note) note.style.display = 'none';
+  }
+
+  function renderTiers(tiers) {
+    if (!tiers.length) return;
+    var grid = document.getElementById('engagement-grid');
+    grid.innerHTML = tiers.map(function(t) {
+      var items = (t.deliverables || []).map(function(d) { return '<li>' + escapeHtml(d) + '</li>'; }).join('');
+      return '<div class="tier-card glass-panel' + (t.popular ? ' popular' : '') + '">' +
+        (t.badge ? '<div class="tier-badge">' + escapeHtml(t.badge) + '</div>' : '') +
+        '<div class="tier-title">' + escapeHtml(t.title || '') + '</div>' +
+        '<div class="tier-price">' + escapeHtml(t.price || '') + '</div>' +
+        (t.cadence ? '<div class="tier-cadence">' + escapeHtml(t.cadence) + '</div>' : '') +
+        '<ul class="tier-list">' + items + '</ul>' +
+        '<a class="tier-cta" href="#contact">' + escapeHtml(t.ctaText || 'Get in touch') + '</a>' +
+      '</div>';
+    }).join('');
+    var note = grid.parentElement.querySelector('.placeholder-note');
+    if (note) note.style.display = 'none';
+  }
+
+  function renderFaqs(faqs) {
+    if (!faqs.length) return;
+    var list = document.querySelector('.faq-list');
+    list.innerHTML = faqs.map(function(f) {
+      return '<details class="faq-item glass-panel">' +
+        '<summary>' + escapeHtml(f.question || '') + '</summary>' +
+        '<div class="faq-answer">' + escapeHtml(f.answer || '') + '</div>' +
+      '</details>';
+    }).join('');
+    var note = list.parentElement.querySelector('.placeholder-note');
+    if (note) note.style.display = 'none';
+  }
 
   /* ==============================
      PROJECTS
