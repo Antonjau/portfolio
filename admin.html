@@ -346,6 +346,45 @@
       font-size: 11px;
     }
 
+    .extra-item {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border: 1px solid var(--line);
+    }
+    .extra-item .extra-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .extra-item .extra-fields.stack { grid-template-columns: 1fr; }
+    .extra-item input,
+    .extra-item textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      background: white;
+    }
+    .extra-item input:focus,
+    .extra-item textarea:focus { outline: none; border-color: var(--accent); }
+    .extra-item textarea { resize: vertical; min-height: 50px; }
+    .extra-item .extra-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .extra-item .extra-checkbox {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12.5px; color: #3F3F46; font-weight: 400;
+    }
+    .extra-item .extra-checkbox input { width: auto; }
+
     .doc-upload-row {
       display: grid;
       grid-template-columns: 1fr 1fr auto;
@@ -493,6 +532,7 @@
       <button class="tab-btn active" data-tab="projects">📁 Projects</button>
       <button class="tab-btn" data-tab="siteinfo">✏️ About &amp; Contact</button>
       <button class="tab-btn" data-tab="documents">📄 Documents</button>
+      <button class="tab-btn" data-tab="extras">🧩 Landing Extras</button>
     </div>
 
     <!-- ===================== PROJECTS TAB ===================== -->
@@ -636,6 +676,45 @@
       </div>
     </div>
 
+    <!-- ===================== LANDING EXTRAS TAB ===================== -->
+    <div class="tab-panel" id="tab-extras">
+
+      <div class="form-card">
+        <h3>Stats</h3>
+        <div class="hint">Shown as a row of metric cards on the landing page. Leave empty to keep the "Add a metric" placeholders live.</div>
+        <div id="stats-container"></div>
+        <button class="btn btn-outline btn-sm" id="add-stat" style="margin-top:8px;">＋ Add stat</button>
+      </div>
+
+      <div class="form-card">
+        <h3>Testimonials</h3>
+        <div class="hint">Quotes from clients, collaborators, or classmates. Leave empty to keep the placeholder cards live.</div>
+        <div id="testimonials-container"></div>
+        <button class="btn btn-outline btn-sm" id="add-testimonial" style="margin-top:8px;">＋ Add testimonial</button>
+      </div>
+
+      <div class="form-card">
+        <h3>Work Tiers</h3>
+        <div class="hint">Ways people can work with you (e.g. project rate, retainer, full-time). Leave empty to keep the placeholder tiers live.</div>
+        <div id="tiers-container"></div>
+        <button class="btn btn-outline btn-sm" id="add-tier" style="margin-top:8px;">＋ Add tier</button>
+      </div>
+
+      <div class="form-card">
+        <h3>FAQ</h3>
+        <div class="hint">Common questions and answers. Leave empty to keep the placeholder questions live.</div>
+        <div id="faqs-container"></div>
+        <button class="btn btn-outline btn-sm" id="add-faq" style="margin-top:8px;">＋ Add question</button>
+      </div>
+
+      <div class="form-card">
+        <div class="form-actions">
+          <button class="btn btn-primary" id="save-extras">💾 Save Landing Extras</button>
+        </div>
+        <div class="save-msg" id="extras-save-msg">✅ Saved successfully!</div>
+      </div>
+    </div>
+
     <footer>
       <span>Anthony Njau — Admin</span>
       <span><a href="#" id="logout-btn">🚪 Logout</a></span>
@@ -706,6 +785,19 @@
   const settingsSaveMsg = document.getElementById('settings-save-msg');
   const paragraphsContainer = document.getElementById('paragraphs-container');
   const addParagraphBtn = document.getElementById('add-paragraph');
+
+  // Landing extras
+  const statsContainer = document.getElementById('stats-container');
+  const addStatBtn = document.getElementById('add-stat');
+  const testimonialsContainer = document.getElementById('testimonials-container');
+  const addTestimonialBtn = document.getElementById('add-testimonial');
+  const tiersContainer = document.getElementById('tiers-container');
+  const addTierBtn = document.getElementById('add-tier');
+  const faqsContainer = document.getElementById('faqs-container');
+  const addFaqBtn = document.getElementById('add-faq');
+  const saveExtrasBtn = document.getElementById('save-extras');
+  const extrasSaveMsg = document.getElementById('extras-save-msg');
+  let extraCounter = 0;
 
   // Image drop zone
   const dropZone = document.getElementById('image-drop-zone');
@@ -1153,10 +1245,181 @@
       } else {
         addParagraph('');
       }
+
+      // Landing extras — leave each container empty (no rows) when
+      // Firestore has nothing yet, so the public site keeps showing
+      // its built-in "EDIT ME" placeholders until you add real ones.
+      statsContainer.innerHTML = '';
+      (data.stats || []).forEach(s => addStat(s));
+
+      testimonialsContainer.innerHTML = '';
+      (data.testimonials || []).forEach(t => addTestimonial(t));
+
+      tiersContainer.innerHTML = '';
+      (data.tiers || []).forEach(t => addTier(t));
+
+      faqsContainer.innerHTML = '';
+      (data.faqs || []).forEach(f => addFaq(f));
     }).catch(err => {
       console.warn('Could not load settings:', err.message);
     });
   }
+
+  // =========================================================
+  // LANDING EXTRAS — Stats, Testimonials, Work Tiers, FAQ
+  // Each follows the same repeater pattern as About paragraphs:
+  // add/remove rows, read them back out on save.
+  // =========================================================
+  function addStat(s = {}) {
+    const id = 'x-' + (++extraCounter);
+    const div = document.createElement('div');
+    div.className = 'extra-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="extra-fields stack">
+        <input type="text" class="stat-value" placeholder="Value, e.g. 12+" value="${escapeHtml(s.value || '')}" />
+        <input type="text" class="stat-label" placeholder="Label, e.g. Projects Shipped" value="${escapeHtml(s.label || '')}" />
+        <input type="text" class="stat-sublabel" placeholder="Sublabel (optional), e.g. since 2023" value="${escapeHtml(s.sublabel || '')}" />
+      </div>
+      <div class="extra-actions">
+        <span></span>
+        <button class="btn btn-danger btn-sm remove-extra" title="Remove">✕ Remove</button>
+      </div>
+    `;
+    div.querySelector('.remove-extra').addEventListener('click', () => div.remove());
+    statsContainer.appendChild(div);
+    return div;
+  }
+
+  function addTestimonial(t = {}) {
+    const id = 'x-' + (++extraCounter);
+    const div = document.createElement('div');
+    div.className = 'extra-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="extra-fields stack">
+        <textarea class="testimonial-quote" rows="2" placeholder="Quote">${escapeHtml(t.quote || '')}</textarea>
+      </div>
+      <div class="extra-fields">
+        <input type="text" class="testimonial-author" placeholder="Author name" value="${escapeHtml(t.author || '')}" />
+        <input type="text" class="testimonial-role" placeholder="Role, Company" value="${escapeHtml(t.role || '')}" />
+      </div>
+      <div class="extra-actions">
+        <span></span>
+        <button class="btn btn-danger btn-sm remove-extra" title="Remove">✕ Remove</button>
+      </div>
+    `;
+    div.querySelector('.remove-extra').addEventListener('click', () => div.remove());
+    testimonialsContainer.appendChild(div);
+    return div;
+  }
+
+  function addTier(t = {}) {
+    const id = 'x-' + (++extraCounter);
+    const div = document.createElement('div');
+    div.className = 'extra-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="extra-fields">
+        <input type="text" class="tier-badge" placeholder="Badge, e.g. POPULAR" value="${escapeHtml(t.badge || '')}" />
+        <input type="text" class="tier-title" placeholder="Tier name" value="${escapeHtml(t.title || '')}" />
+        <input type="text" class="tier-price" placeholder="Price, e.g. $500 or Custom" value="${escapeHtml(t.price || '')}" />
+        <input type="text" class="tier-cadence" placeholder="Cadence, e.g. per project" value="${escapeHtml(t.cadence || '')}" />
+      </div>
+      <div class="extra-fields stack">
+        <textarea class="tier-deliverables" rows="3" placeholder="One deliverable per line">${escapeHtml((t.deliverables || []).join('\n'))}</textarea>
+        <input type="text" class="tier-cta" placeholder="Button text, e.g. Get in touch" value="${escapeHtml(t.ctaText || '')}" />
+      </div>
+      <div class="extra-actions">
+        <label class="extra-checkbox">
+          <input type="checkbox" class="tier-popular" ${t.popular ? 'checked' : ''} />
+          ⭐ Mark as popular
+        </label>
+        <button class="btn btn-danger btn-sm remove-extra" title="Remove">✕ Remove</button>
+      </div>
+    `;
+    div.querySelector('.remove-extra').addEventListener('click', () => div.remove());
+    tiersContainer.appendChild(div);
+    return div;
+  }
+
+  function addFaq(f = {}) {
+    const id = 'x-' + (++extraCounter);
+    const div = document.createElement('div');
+    div.className = 'extra-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="extra-fields stack">
+        <input type="text" class="faq-question" placeholder="Question" value="${escapeHtml(f.question || '')}" />
+        <textarea class="faq-answer" rows="2" placeholder="Answer">${escapeHtml(f.answer || '')}</textarea>
+      </div>
+      <div class="extra-actions">
+        <span></span>
+        <button class="btn btn-danger btn-sm remove-extra" title="Remove">✕ Remove</button>
+      </div>
+    `;
+    div.querySelector('.remove-extra').addEventListener('click', () => div.remove());
+    faqsContainer.appendChild(div);
+    return div;
+  }
+
+  addStatBtn.addEventListener('click', () => addStat());
+  addTestimonialBtn.addEventListener('click', () => addTestimonial());
+  addTierBtn.addEventListener('click', () => addTier());
+  addFaqBtn.addEventListener('click', () => addFaq());
+
+  saveExtrasBtn.addEventListener('click', function() {
+    if (!firebaseReady || !db) { alert('Firebase not available. Cannot save.'); return; }
+
+    const stats = [];
+    statsContainer.querySelectorAll('.extra-item').forEach(row => {
+      const value = row.querySelector('.stat-value').value.trim();
+      const label = row.querySelector('.stat-label').value.trim();
+      const sublabel = row.querySelector('.stat-sublabel').value.trim();
+      if (value || label) stats.push({ value, label, sublabel });
+    });
+
+    const testimonials = [];
+    testimonialsContainer.querySelectorAll('.extra-item').forEach(row => {
+      const quote = row.querySelector('.testimonial-quote').value.trim();
+      const author = row.querySelector('.testimonial-author').value.trim();
+      const role = row.querySelector('.testimonial-role').value.trim();
+      if (quote || author) testimonials.push({ quote, author, role });
+    });
+
+    const tiers = [];
+    tiersContainer.querySelectorAll('.extra-item').forEach(row => {
+      const title = row.querySelector('.tier-title').value.trim();
+      const price = row.querySelector('.tier-price').value.trim();
+      if (!title && !price) return;
+      tiers.push({
+        badge: row.querySelector('.tier-badge').value.trim(),
+        title,
+        price,
+        cadence: row.querySelector('.tier-cadence').value.trim(),
+        deliverables: row.querySelector('.tier-deliverables').value.split('\n').map(s => s.trim()).filter(Boolean),
+        ctaText: row.querySelector('.tier-cta').value.trim() || 'Get in touch',
+        popular: row.querySelector('.tier-popular').checked
+      });
+    });
+
+    const faqs = [];
+    faqsContainer.querySelectorAll('.extra-item').forEach(row => {
+      const question = row.querySelector('.faq-question').value.trim();
+      const answer = row.querySelector('.faq-answer').value.trim();
+      if (question) faqs.push({ question, answer });
+    });
+
+    db.collection('settings').doc('site').set({
+      stats, testimonials, tiers, faqs,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true })
+      .then(() => {
+        extrasSaveMsg.classList.add('show');
+        setTimeout(() => extrasSaveMsg.classList.remove('show'), 3000);
+      })
+      .catch(err => alert('Save error: ' + err.message));
+  });
 
   saveSettingsBtn.addEventListener('click', function() {
     if (!firebaseReady || !db) { alert('Firebase not available. Cannot save.'); return; }
